@@ -15,15 +15,15 @@ public class Console : MonoBehaviour
 
 	struct ConsoleMessage
 	{
-		public readonly string  message;
-		public readonly string  stackTrace;
+		public readonly string message;
+		public readonly string stackTrace;
 		public readonly LogType	type;
 
 		public ConsoleMessage (string message, string stackTrace, LogType type)
 		{
-			this.message    = message;
+			this.message = message;
 			this.stackTrace	= stackTrace;
-			this.type       = type;
+			this.type = type;
 		}
 	}
 
@@ -39,10 +39,10 @@ public class Console : MonoBehaviour
 	const int margin = 20;
 	Rect windowRect = new Rect(margin, margin, Screen.width - (2 * margin), Screen.height - (2 * margin));
 
-	GUIContent clearLabel    = new GUIContent("Clear",    "Clear the contents of the console.");
+	GUIContent clearLabel = new GUIContent("Clear", "Clear the contents of the console.");
 	GUIContent collapseLabel = new GUIContent("Collapse", "Hide repeated messages.");
 
-	void OnEnable  () { Application.RegisterLogCallback(HandleLog); }
+	void OnEnable () { Application.RegisterLogCallback(HandleLog); }
 	void OnDisable () { Application.RegisterLogCallback(null); }
 
 	void Update ()

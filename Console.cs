@@ -1,49 +1,55 @@
-using UnityEngine;
-using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 /// <summary>
-/// A console that displays the contents of Unity's debug log.
+/// A console to display Unity's debug logs in-game.
 /// </summary>
-/// <remarks>
-/// Developed by Matthew Miner (www.matthewminer.com)
-/// Permission is given to use this script however you please with absolutely no restrictions.
-/// </remarks>
 public class Console : MonoBehaviour
 {
-	public static readonly Version version = new Version(1, 0);
-
-	struct ConsoleMessage
+	struct Log
 	{
-		public readonly string message;
-		public readonly string stackTrace;
-		public readonly LogType	type;
-
-		public ConsoleMessage (string message, string stackTrace, LogType type)
-		{
-			this.message = message;
-			this.stackTrace	= stackTrace;
-			this.type = type;
-		}
+		public string message;
+		public string stackTrace;
+		public LogType type;
 	}
 
+	/// <summary>
+	/// The hotkey to show and hide the console window.
+	/// </summary>
 	public KeyCode toggleKey = KeyCode.BackQuote;
 
-	List<ConsoleMessage> entries = new List<ConsoleMessage>();
-	Vector2 scrollPos;
+	List<Log> logs = new List<Log>();
+	Vector2 scrollPosition;
 	bool show;
 	bool collapse;
 
 	// Visual elements:
 
-	const int margin = 20;
-	Rect windowRect = new Rect(margin, margin, Screen.width - (2 * margin), Screen.height - (2 * margin));
+	static readonly Dictionary<LogType, Color> logTypeColors = new Dictionary<LogType, Color>()
+	{
+		{ LogType.Assert, Color.white },
+		{ LogType.Error, Color.red },
+		{ LogType.Exception, Color.red },
+		{ LogType.Log, Color.white },
+		{ LogType.Warning, Color.yellow },
+	};
 
+	const int margin = 20;
+
+	Rect windowRect = new Rect(margin, margin, Screen.width - (margin * 2), Screen.height - (margin * 2));
+	Rect titleBarRect = new Rect(0, 0, 10000, 20);
 	GUIContent clearLabel = new GUIContent("Clear", "Clear the contents of the console.");
 	GUIContent collapseLabel = new GUIContent("Collapse", "Hide repeated messages.");
 
-	void OnEnable () { Application.RegisterLogCallback(HandleLog); }
-	void OnDisable () { Application.RegisterLogCallback(null); }
+	void OnEnable ()
+	{
+		Application.RegisterLogCallback(HandleLog);
+	}
+
+	void OnDisable ()
+	{
+		Application.RegisterLogCallback(null);
+	}
 
 	void Update ()
 	{
@@ -62,70 +68,60 @@ public class Console : MonoBehaviour
 	}
 
 	/// <summary>
-	/// A window displaying the logged messages.
+	/// A window that displayss the recorded logs.
 	/// </summary>
-	/// <param name="windowID">The window's ID.</param>
+	/// <param name="windowID">Window ID.</param>
 	void ConsoleWindow (int windowID)
 	{
-		scrollPos = GUILayout.BeginScrollView(scrollPos);
-			
-			// Go through each logged entry
-			for (int i = 0; i < entries.Count; i++) {
-				ConsoleMessage entry = entries[i];
+		scrollPosition = GUILayout.BeginScrollView(scrollPosition);
 
-				// If this message is the same as the last one and the collapse feature is chosen, skip it
-				if (collapse && i > 0 && entry.message == entries[i - 1].message) {
-					continue;
+			// Iterate through the recorded logs.
+			for (int i = 0; i < logs.Count; i++) {
+				var log = logs[i];
+
+				// Combine identical messages if collapse option is chosen.
+				if (collapse) {
+					var messageSameAsPrevious = i > 0 && log.message == logs[i - 1].message;
+
+					if (messageSameAsPrevious) {
+						continue;
+					}
 				}
 
-				// Change the text colour according to the log type
-				switch (entry.type) {
-					case LogType.Error:
-					case LogType.Exception:
-						GUI.contentColor = Color.red;
-						break;
-
-					case LogType.Warning:
-						GUI.contentColor = Color.yellow;
-						break;
-
-					default:
-						GUI.contentColor = Color.white;
-						break;
-				}
-
-				GUILayout.Label(entry.message);
+				GUI.contentColor = logTypeColors[log.type];
+				GUILayout.Label(log.message);
 			}
-
-			GUI.contentColor = Color.white;
 
 		GUILayout.EndScrollView();
 
+		GUI.contentColor = Color.white;
+
 		GUILayout.BeginHorizontal();
 
-			// Clear button
 			if (GUILayout.Button(clearLabel)) {
-				entries.Clear();
+				logs.Clear();
 			}
-			
-			// Collapse toggle
+
 			collapse = GUILayout.Toggle(collapse, collapseLabel, GUILayout.ExpandWidth(false));
 
 		GUILayout.EndHorizontal();
 
-		// Set the window to be draggable by the top title bar
-		GUI.DragWindow(new Rect(0, 0, 10000, 20));
+		// Allow the window to be dragged by its title bar.
+		GUI.DragWindow(titleBarRect);
 	}
 
 	/// <summary>
-	/// Logged messages are sent through this callback function.
+	/// Records a log from the log callback.
 	/// </summary>
-	/// <param name="message">The message itself.</param>
-	/// <param name="stackTrace">A trace of where the message came from.</param>
-	/// <param name="type">The type of message: error/exception, warning, or assert.</param>
+	/// <param name="message">Message.</param>
+	/// <param name="stackTrace">Trace of where the message came from.</param>
+	/// <param name="type">Type of message (error, exception, warning, assert).</param>
 	void HandleLog (string message, string stackTrace, LogType type)
 	{
-		ConsoleMessage entry = new ConsoleMessage(message, stackTrace, type);
-		entries.Add(entry);
+		logs.Add(new Log() {
+			message = message,
+			stackTrace = stackTrace,
+			type = type,
+		});
 	}
 }

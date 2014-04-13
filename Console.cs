@@ -6,7 +6,7 @@ namespace Consolation
 	/// <summary>
 	/// A console to display Unity's debug logs in-game.
 	/// </summary>
-	public class Console : MonoBehaviour
+	class Console : MonoBehaviour
 	{
 		struct Log
 		{

@@ -7,10 +7,11 @@ the game itself. This is especially useful on mobile devices.
 ## Using
 
 Attach this script to a game object. The window can be opened with a
-configurable hotkey (defaults to backtick).
+configurable hotkey (defaults to backtick). Alternatively, shake-to-open can
+be enabled in the Inspector to open the console on mobile devices.
 
 
 ## Compatibility
 
 Supports Unity 4.x. It hasn't been tested on all the platforms that Unity
-supports.
+supports but it probably works on most.

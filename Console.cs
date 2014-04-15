@@ -15,19 +15,33 @@ namespace Consolation
 			public LogType type;
 		}
 
+		#region Inspector Settings
+
 		/// <summary>
 		/// The hotkey to show and hide the console window.
 		/// </summary>
 		public KeyCode toggleKey = KeyCode.BackQuote;
 
-		List<Log> logs = new List<Log>();
+		/// <summary>
+		/// Whether to open the window by shaking the device (mobile-only).
+		/// </summary>
+		public bool shakeToOpen = true;
+
+		/// <summary>
+		/// The (squared) acceleration above which the window should open.
+		/// </summary>
+		public float shakeAcceleration = 3f;
+
+		#endregion
+
+		readonly List<Log> logs = new List<Log>();
 		Vector2 scrollPosition;
-		bool show;
+		bool visible;
 		bool collapse;
 
 		// Visual elements:
 
-		static readonly Dictionary<LogType, Color> logTypeColors = new Dictionary<LogType, Color>()
+		static readonly Dictionary<LogType, Color> logTypeColors = new Dictionary<LogType, Color>
 		{
 			{ LogType.Assert, Color.white },
 			{ LogType.Error, Color.red },
@@ -36,12 +50,13 @@ namespace Consolation
 			{ LogType.Warning, Color.yellow },
 		};
 
+		const string windowTitle = "Console";
 		const int margin = 20;
+		static readonly GUIContent clearLabel = new GUIContent("Clear", "Clear the contents of the console.");
+		static readonly GUIContent collapseLabel = new GUIContent("Collapse", "Hide repeated messages.");
 
+		readonly Rect titleBarRect = new Rect(0, 0, 10000, 20);
 		Rect windowRect = new Rect(margin, margin, Screen.width - (margin * 2), Screen.height - (margin * 2));
-		Rect titleBarRect = new Rect(0, 0, 10000, 20);
-		GUIContent clearLabel = new GUIContent("Clear", "Clear the contents of the console.");
-		GUIContent collapseLabel = new GUIContent("Collapse", "Hide repeated messages.");
 
 		void OnEnable ()
 		{
@@ -56,17 +71,21 @@ namespace Consolation
 		void Update ()
 		{
 			if (Input.GetKeyDown(toggleKey)) {
-				show = !show;
+				visible = !visible;
+			}
+
+			if (shakeToOpen && Input.acceleration.sqrMagnitude > shakeAcceleration) {
+				visible = true;
 			}
 		}
 
 		void OnGUI ()
 		{
-			if (!show) {
+			if (!visible) {
 				return;
 			}
 
-			windowRect = GUILayout.Window(123456, windowRect, ConsoleWindow, "Console");
+			windowRect = GUILayout.Window(123456, windowRect, ConsoleWindow, windowTitle);
 		}
 
 		/// <summary>
@@ -120,7 +139,7 @@ namespace Consolation
 		/// <param name="type">Type of message (error, exception, warning, assert).</param>
 		void HandleLog (string message, string stackTrace, LogType type)
 		{
-			logs.Add(new Log() {
+			logs.Add(new Log {
 				message = message,
 				stackTrace = stackTrace,
 				type = type,

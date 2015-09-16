@@ -32,6 +32,18 @@ namespace Consolation
 		/// </summary>
 		public float shakeAcceleration = 3f;
 
+		/// <summary>
+		/// Whether to only keep a certain number of logs.
+		///
+		/// Setting this can be helpful if memory usage is a concern.
+		/// </summary>
+		public bool restrictLogCount = false;
+
+		/// <summary>
+		/// Number of logs to keep before removing old ones.
+		/// </summary>
+		public int maxLogs = 1000;
+
 		#endregion
 
 		readonly List<Log> logs = new List<Log>();
@@ -168,6 +180,26 @@ namespace Consolation
 				stackTrace = stackTrace,
 				type = type,
 			});
+
+			TrimExcessLogs();
+		}
+
+		/// <summary>
+		/// Removes old logs that exceed the maximum number allowed.
+		/// </summary>
+		void TrimExcessLogs ()
+		{
+			if (!restrictLogCount) {
+				return;
+			}
+
+			var amountToRemove = Mathf.Max(logs.Count - maxLogs, 0);
+
+			if (amountToRemove == 0) {
+				return;
+			}
+
+			logs.RemoveRange(0, amountToRemove);
 		}
 	}
 }

@@ -93,26 +93,38 @@ namespace Consolation
 				return;
 			}
 
-			windowRect = GUILayout.Window(123456, windowRect, ConsoleWindow, windowTitle);
+			windowRect = GUILayout.Window(123456, windowRect, DrawConsoleWindow, windowTitle);
 		}
 
 		/// <summary>
-		/// A window that displayss the recorded logs.
+		/// Displays a window that lists the recorded logs.
 		/// </summary>
 		/// <param name="windowID">Window ID.</param>
-		void ConsoleWindow (int windowID)
+		void DrawConsoleWindow (int windowID)
+		{
+			DrawLogsList();
+			DrawToolbar();
+
+			// Allow the window to be dragged by its title bar.
+			GUI.DragWindow(titleBarRect);
+		}
+
+		/// <summary>
+		/// Displays a scrollable list of logs.
+		/// </summary>
+		void DrawLogsList ()
 		{
 			scrollPosition = GUILayout.BeginScrollView(scrollPosition);
 
 				// Iterate through the recorded logs.
-				for (int i = 0; i < logs.Count; i++) {
+				for (var i = 0; i < logs.Count; i++) {
 					var log = logs[i];
 
 					// Combine identical messages if collapse option is chosen.
-					if (collapse) {
-						var messageSameAsPrevious = i > 0 && log.message == logs[i - 1].message;
+					if (collapse && i > 0) {
+						var previousMessage = logs[i - 1].message;
 
-						if (messageSameAsPrevious) {
+						if (log.message == previousMessage) {
 							continue;
 						}
 					}
@@ -123,8 +135,15 @@ namespace Consolation
 
 			GUILayout.EndScrollView();
 
+			// Ensure GUI colour is reset before drawing other components.
 			GUI.contentColor = Color.white;
+		}
 
+		/// <summary>
+		/// Displays options for filtering and changing the logs list.
+		/// </summary>
+		void DrawToolbar ()
+		{
 			GUILayout.BeginHorizontal();
 
 				if (GUILayout.Button(clearLabel)) {
@@ -134,9 +153,6 @@ namespace Consolation
 				collapse = GUILayout.Toggle(collapse, collapseLabel, GUILayout.ExpandWidth(false));
 
 			GUILayout.EndHorizontal();
-
-			// Allow the window to be dragged by its title bar.
-			GUI.DragWindow(titleBarRect);
 		}
 
 		/// <summary>

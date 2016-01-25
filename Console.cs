@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -128,6 +129,9 @@ namespace Consolation
 		{
 			scrollPosition = GUILayout.BeginScrollView(scrollPosition);
 
+			// Used to determine height of accumulated log labels.
+			GUILayout.BeginVertical();
+
 				// Iterate through the recorded logs.
 				for (var i = 0; i < logs.Count; i++) {
 					var log = logs[i];
@@ -145,7 +149,15 @@ namespace Consolation
 					GUILayout.Label(log.message);
 				}
 
+			GUILayout.EndVertical();
+			var innerScrollRect = GUILayoutUtility.GetLastRect();
 			GUILayout.EndScrollView();
+			var outerScrollRect = GUILayoutUtility.GetLastRect();
+
+			// If we're scrolled to bottom now, guarantee that it continues to be in next cycle.
+			if (Event.current.type == EventType.Repaint && IsScrolledToBottom(innerScrollRect, outerScrollRect)) {
+				ScrollToBottom();
+			}
 
 			// Ensure GUI colour is reset before drawing other components.
 			GUI.contentColor = Color.white;
@@ -182,6 +194,35 @@ namespace Consolation
 			});
 
 			TrimExcessLogs();
+		}
+
+		/// <summary>
+		/// Determines whether the scroll view is scrolled to the bottom.
+		/// </summary>
+		/// <param name="innerScrollRect">Rect surrounding scroll view content.</param>
+		/// <param name="outerScrollRect">Scroll view container.</param>
+		/// <returns>Whether scroll view is scrolled to bottom.</returns>
+		bool IsScrolledToBottom (Rect innerScrollRect, Rect outerScrollRect) {
+			var innerScrollHeight = innerScrollRect.height;
+
+			// Take into account extra padding added to the scroll container.
+			var outerScrollHeight = outerScrollRect.height - GUI.skin.box.padding.vertical;
+
+			// If contents of scroll view haven't exceeded outer container, treat it as scrolled to bottom.
+			if (outerScrollHeight > innerScrollHeight) {
+				return true;
+			}
+
+			var scrolledToBottom = Mathf.Approximately(innerScrollHeight, scrollPosition.y + outerScrollHeight);
+			return scrolledToBottom;
+		}
+
+		/// <summary>
+		/// Moves the scroll view down so that the last log is visible.
+		/// </summary>
+		void ScrollToBottom ()
+		{
+			scrollPosition = new Vector2(0, Int32.MaxValue);
 		}
 
 		/// <summary>

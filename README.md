@@ -3,6 +3,8 @@ outside the editor is difficult. To make it easier, this console displays
 output from the `Debug` class, as well as any errors and exceptions thrown, in
 the game itself. This is especially useful on mobile devices.
 
+![Screenshot](screenshot.png)
+
 
 ## Using
 

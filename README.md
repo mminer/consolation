@@ -1,3 +1,5 @@
+# Consolation
+
 Unity's editor console is indispensible, but retrieving debug logs and warnings
 outside the editor is difficult. To make it easier, this console displays
 output from the `Debug` class, as well as any errors and exceptions thrown, in

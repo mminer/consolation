@@ -52,6 +52,15 @@ namespace Consolation
 		bool visible;
 		bool collapse;
 
+        Dictionary<LogType, bool> logTypeFilters = new Dictionary<LogType, bool>
+        {
+            { LogType.Assert, true},
+            { LogType.Error, true },
+            { LogType.Exception,true},
+            { LogType.Log, true },
+            { LogType.Warning, true },
+        };
+
 		// Visual elements:
 
 		static readonly Dictionary<LogType, Color> logTypeColors = new Dictionary<LogType, Color>
@@ -127,18 +136,23 @@ namespace Consolation
 				// Iterate through the recorded logs.
 				for (var i = 0; i < logs.Count; i++) {
 					var log = logs[i];
+                    //If is not filtered, can be drawn.
+                    if (logTypeFilters[log.type])
+                    {
+                        // Combine identical messages if collapse option is chosen.
+                        if (collapse && i > 0)
+                        {
+                            var previousMessage = logs[i - 1].message;
 
-					// Combine identical messages if collapse option is chosen.
-					if (collapse && i > 0) {
-						var previousMessage = logs[i - 1].message;
+                            if (log.message == previousMessage)
+                            {
+                                continue;
+                            }
+                        }
 
-						if (log.message == previousMessage) {
-							continue;
-						}
-					}
-
-					GUI.contentColor = logTypeColors[log.type];
-					GUILayout.Label(log.message);
+                        GUI.contentColor = logTypeColors[log.type];
+                        GUILayout.Label(log.message);
+                    }   
 				}
 
 			GUILayout.EndVertical();
@@ -166,8 +180,13 @@ namespace Consolation
 					logs.Clear();
 				}
 
+                for (int i = 0; i<5; i++)
+                {
+                    LogType actualType = (LogType) i;
+                    logTypeFilters[actualType] = GUILayout.Toggle(logTypeFilters[actualType], new GUIContent(actualType.ToString(), actualType.ToString() + " toggle filter"), ToggleLayoutOptions); 
+                }
 				collapse = GUILayout.Toggle(collapse, collapseLabel, GUILayout.ExpandWidth(false));
-
+                
 			GUILayout.EndHorizontal();
 		}
 
@@ -234,5 +253,16 @@ namespace Consolation
 
 			logs.RemoveRange(0, amountToRemove);
 		}
-	}
+
+
+
+        public static GUILayoutOption[] ToggleLayoutOptions
+        {
+            get
+            {
+                return new GUILayoutOption[] { GUILayout.MaxWidth(100) };
+            }
+        }
+
+    }
 }

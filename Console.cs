@@ -139,7 +139,7 @@ namespace Consolation
 
                     // Skip logs that are filtered out.
                     if (!logTypeFilters[log.type]) {
-                        return;
+                        continue;
                     }
 
                     // Combine identical messages if collapse option is chosen.

@@ -14,6 +14,7 @@ namespace Consolation
             public string message;
             public string stackTrace;
             public LogType type;
+            public int duplicateCount;
         }
 
         #region Inspector Settings
@@ -135,24 +136,25 @@ namespace Consolation
 
                 // Iterate through the recorded logs.
                 for (var i = 0; i < logs.Count; i++) {
-                    var log = logs[i];
+                    Log log = logs[i];
 
                     // Skip logs that are filtered out.
                     if (!logTypeFilters[log.type]) {
                         continue;
                     }
 
-                    // Combine identical messages if collapse option is chosen.
-                    if (collapse && i > 0) {
-                        var previousMessage = logs[i - 1].message;
+                    GUI.contentColor = logTypeColors[log.type];
 
-                        if (log.message == previousMessage) {
-                            continue;
+                    // Collapse duplicates into a single log entry with a leading counter
+                    if (collapse) {
+                        GUILayout.Label(string.Format("({0}) {1}", log.duplicateCount, log.message));
+
+                    // Duplicates get individual lines
+                    } else {
+                        for (int j = 0; j <= log.duplicateCount; j++) {
+                            GUILayout.Label(log.message);
                         }
                     }
-
-                    GUI.contentColor = logTypeColors[log.type];
-                    GUILayout.Label(log.message);
                 }
 
             GUILayout.EndVertical();
@@ -200,13 +202,34 @@ namespace Consolation
         /// <param name="type">Type of message (error, exception, warning, assert).</param>
         void HandleLog (string message, string stackTrace, LogType type)
         {
-            logs.Add(new Log {
+            int lastIndex = logs.Count - 1;
+            int duplicateCount = 0;
+
+            // Log list not empty
+            if (lastIndex > -1) {
+                Log lastLog = logs[lastIndex];
+
+                // Increment duplicateCount if log matches previous
+                if (message == lastLog.message && type == lastLog.type && stackTrace == lastLog.stackTrace) {
+                    duplicateCount = lastLog.duplicateCount + 1;
+                }
+            }
+
+            Log newLog = new Log {
                 message = message,
                 stackTrace = stackTrace,
                 type = type,
-            });
+                duplicateCount = duplicateCount
+            };
 
-            TrimExcessLogs();
+            // Log is a duplicate; update previous log
+            if (logs.Count > 0 && duplicateCount > 0) {
+                logs[lastIndex] = newLog;
+
+            } else {
+                logs.Add(newLog);
+                TrimExcessLogs();
+            }
         }
 
         /// <summary>
@@ -215,7 +238,8 @@ namespace Consolation
         /// <param name="innerScrollRect">Rect surrounding scroll view content.</param>
         /// <param name="outerScrollRect">Scroll view container.</param>
         /// <returns>Whether scroll view is scrolled to bottom.</returns>
-        bool IsScrolledToBottom (Rect innerScrollRect, Rect outerScrollRect) {
+        bool IsScrolledToBottom (Rect innerScrollRect, Rect outerScrollRect)
+        {
             var innerScrollHeight = innerScrollRect.height;
 
             // Take into account extra padding added to the scroll container.

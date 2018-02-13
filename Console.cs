@@ -104,11 +104,9 @@ namespace Consolation
 
         void OnGUI ()
         {
-            if (!visible) {
-                return;
+            if (visible) {
+                windowRect = GUILayout.Window(123456, windowRect, DrawConsoleWindow, windowTitle);
             }
-
-            windowRect = GUILayout.Window(123456, windowRect, DrawConsoleWindow, windowTitle);
         }
 
         /// <summary>
@@ -223,12 +221,16 @@ namespace Consolation
             };
 
             // Log is a duplicate; update previous log
-            if (logs.Count > 0 && duplicateCount > 0) {
+            if (duplicateCount > 0) {
                 logs[lastIndex] = newLog;
 
             } else {
                 logs.Add(newLog);
-                TrimExcessLogs();
+                
+                // Remove oldest log if restriction is enabled and limit is met
+                if (restrictLogCount && lastIndex >= maxLogs) {
+                    logs.RemoveAt(0);
+                }
             }
         }
 
@@ -249,9 +251,9 @@ namespace Consolation
             if (outerScrollHeight > innerScrollHeight) {
                 return true;
             }
-
-            var scrolledToBottom = Mathf.Approximately(innerScrollHeight, scrollPosition.y + outerScrollHeight);
-            return scrolledToBottom;
+            
+            // Scrolled to bottom (with error margin for float math)
+            return Mathf.Approximately(innerScrollHeight, scrollPosition.y + outerScrollHeight);
         }
 
         /// <summary>
@@ -260,24 +262,6 @@ namespace Consolation
         void ScrollToBottom ()
         {
             scrollPosition = new Vector2(0, Int32.MaxValue);
-        }
-
-        /// <summary>
-        /// Removes old logs that exceed the maximum number allowed.
-        /// </summary>
-        void TrimExcessLogs ()
-        {
-            if (!restrictLogCount) {
-                return;
-            }
-
-            var amountToRemove = Mathf.Max(logs.Count - maxLogs, 0);
-
-            if (amountToRemove == 0) {
-                return;
-            }
-
-            logs.RemoveRange(0, amountToRemove);
         }
     }
 }

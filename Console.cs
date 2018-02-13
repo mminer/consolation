@@ -14,7 +14,7 @@ namespace Consolation
             public string message;
             public string stackTrace;
             public LogType type;
-            public int duplicateCount;
+            public int logCount;
         }
 
         #region Inspector Settings
@@ -81,17 +81,17 @@ namespace Consolation
         readonly Rect titleBarRect = new Rect(0, 0, 10000, 20);
         Rect windowRect = new Rect(margin, margin, Screen.width - (margin * 2), Screen.height - (margin * 2));
 
-        void OnEnable ()
+        void OnEnable()
         {
             Application.logMessageReceived += HandleLog;
         }
 
-        void OnDisable ()
+        void OnDisable()
         {
             Application.logMessageReceived -= HandleLog;
         }
 
-        void Update ()
+        void Update()
         {
             if (Input.GetKeyDown(toggleKey)) {
                 visible = !visible;
@@ -102,20 +102,18 @@ namespace Consolation
             }
         }
 
-        void OnGUI ()
+        void OnGUI()
         {
-            if (!visible) {
-                return;
+            if (visible) {
+                windowRect = GUILayout.Window(123456, windowRect, DrawConsoleWindow, windowTitle);
             }
-
-            windowRect = GUILayout.Window(123456, windowRect, DrawConsoleWindow, windowTitle);
         }
 
         /// <summary>
         /// Displays a window that lists the recorded logs.
         /// </summary>
         /// <param name="windowID">Window ID.</param>
-        void DrawConsoleWindow (int windowID)
+        void DrawConsoleWindow(int windowID)
         {
             DrawLogsList();
             DrawToolbar();
@@ -127,40 +125,40 @@ namespace Consolation
         /// <summary>
         /// Displays a scrollable list of logs.
         /// </summary>
-        void DrawLogsList ()
+        void DrawLogsList()
         {
             scrollPosition = GUILayout.BeginScrollView(scrollPosition);
 
             // Used to determine height of accumulated log labels.
             GUILayout.BeginVertical();
 
-                // Iterate through the recorded logs.
-                for (var i = 0; i < logs.Count; i++) {
-                    Log log = logs[i];
+            // Iterate through the recorded logs.
+            for (int i = 0; i < logs.Count; i++) {
+                Log log = logs[i];
 
-                    // Skip logs that are filtered out.
-                    if (!logTypeFilters[log.type]) {
-                        continue;
-                    }
-
-                    GUI.contentColor = logTypeColors[log.type];
-
-                    // Collapse duplicates into a single log entry with a leading counter
-                    if (collapse) {
-                        GUILayout.Label(string.Format("({0}) {1}", log.duplicateCount, log.message));
-
-                    // Duplicates get individual lines
-                    } else {
-                        for (int j = 0; j <= log.duplicateCount; j++) {
-                            GUILayout.Label(log.message);
-                        }
-                    }
+                // Skip logs that are filtered out.
+                if (!logTypeFilters[log.type]) {
+                    continue;
                 }
 
+                GUI.contentColor = logTypeColors[log.type];
+
+                // Collapse duplicates into a single log entry with a leading counter
+                if (log.logCount > 1 && collapse) {
+                    GUILayout.Label(string.Format("({0}) {1}", log.logCount, log.message));
+
+                // Print each log separately
+                } else {
+                    for (int j = 0; j < log.logCount; j++) {
+                        GUILayout.Label(log.message);
+                    }
+                }
+            }
+
             GUILayout.EndVertical();
-            var innerScrollRect = GUILayoutUtility.GetLastRect();
+            Rect innerScrollRect = GUILayoutUtility.GetLastRect();
             GUILayout.EndScrollView();
-            var outerScrollRect = GUILayoutUtility.GetLastRect();
+            Rect outerScrollRect = GUILayoutUtility.GetLastRect();
 
             // If we're scrolled to bottom now, guarantee that it continues to be in next cycle.
             if (Event.current.type == EventType.Repaint && IsScrolledToBottom(innerScrollRect, outerScrollRect)) {
@@ -174,7 +172,7 @@ namespace Consolation
         /// <summary>
         /// Displays options for filtering and changing the logs list.
         /// </summary>
-        void DrawToolbar ()
+        void DrawToolbar()
         {
             GUILayout.BeginHorizontal();
 
@@ -183,8 +181,8 @@ namespace Consolation
                 }
 
                 foreach (LogType logType in Enum.GetValues(typeof(LogType))) {
-                    var currentState = logTypeFilters[logType];
-                    var label = logType.ToString();
+                    bool currentState = logTypeFilters[logType];
+                    string label = logType.ToString();
                     logTypeFilters[logType] = GUILayout.Toggle(currentState, label, GUILayout.ExpandWidth(false));
                     GUILayout.Space(20);
                 }
@@ -200,18 +198,18 @@ namespace Consolation
         /// <param name="message">Message.</param>
         /// <param name="stackTrace">Trace of where the message came from.</param>
         /// <param name="type">Type of message (error, exception, warning, assert).</param>
-        void HandleLog (string message, string stackTrace, LogType type)
+        void HandleLog(string message, string stackTrace, LogType type)
         {
             int lastIndex = logs.Count - 1;
-            int duplicateCount = 0;
+            int logCount = 1;
 
             // Log list not empty
             if (lastIndex > -1) {
                 Log lastLog = logs[lastIndex];
 
-                // Increment duplicateCount if log matches previous
+                // Increment logCount if log matches previous
                 if (message == lastLog.message && type == lastLog.type && stackTrace == lastLog.stackTrace) {
-                    duplicateCount = lastLog.duplicateCount + 1;
+                    logCount = lastLog.logCount + 1;
                 }
             }
 
@@ -219,16 +217,24 @@ namespace Consolation
                 message = message,
                 stackTrace = stackTrace,
                 type = type,
-                duplicateCount = duplicateCount
+                logCount = logCount
             };
 
             // Log is a duplicate; update previous log
-            if (logs.Count > 0 && duplicateCount > 0) {
+            if (logCount > 1) {
                 logs[lastIndex] = newLog;
 
             } else {
                 logs.Add(newLog);
-                TrimExcessLogs();
+
+                // Remove oldest log if restriction is enabled and limit is met
+                if (restrictLogCount && lastIndex == maxLogs) {
+                    logs.RemoveAt(0);
+
+                // Sanity check; should be impossible to reach
+                } else if (restrictLogCount && lastIndex > maxLogs) {
+                    TrimExcessLogs();
+                }
             }
         }
 
@@ -238,46 +244,42 @@ namespace Consolation
         /// <param name="innerScrollRect">Rect surrounding scroll view content.</param>
         /// <param name="outerScrollRect">Scroll view container.</param>
         /// <returns>Whether scroll view is scrolled to bottom.</returns>
-        bool IsScrolledToBottom (Rect innerScrollRect, Rect outerScrollRect)
+        bool IsScrolledToBottom(Rect innerScrollRect, Rect outerScrollRect)
         {
-            var innerScrollHeight = innerScrollRect.height;
+            float innerScrollHeight = innerScrollRect.height;
 
             // Take into account extra padding added to the scroll container.
-            var outerScrollHeight = outerScrollRect.height - GUI.skin.box.padding.vertical;
+            float outerScrollHeight = outerScrollRect.height - GUI.skin.box.padding.vertical;
 
             // If contents of scroll view haven't exceeded outer container, treat it as scrolled to bottom.
             if (outerScrollHeight > innerScrollHeight) {
                 return true;
             }
 
-            var scrolledToBottom = Mathf.Approximately(innerScrollHeight, scrollPosition.y + outerScrollHeight);
-            return scrolledToBottom;
+            // Scrolled to bottom (with error margin for float math)
+            return Mathf.Approximately(innerScrollHeight, scrollPosition.y + outerScrollHeight);
         }
-
+         
         /// <summary>
         /// Moves the scroll view down so that the last log is visible.
         /// </summary>
-        void ScrollToBottom ()
+        void ScrollToBottom()
         {
             scrollPosition = new Vector2(0, Int32.MaxValue);
         }
-
+        
         /// <summary>
-        /// Removes old logs that exceed the maximum number allowed.
+        /// Removes old logs that exceed the maximum number allowed if log count restriction is enabled.
         /// </summary>
-        void TrimExcessLogs ()
+        void TrimExcessLogs()
         {
-            if (!restrictLogCount) {
-                return;
+            if (restrictLogCount) {
+                int amountToRemove = Mathf.Max(logs.Count - maxLogs, 0);
+
+                if (amountToRemove > 0) {
+                    logs.RemoveRange(0, amountToRemove);
+                }
             }
-
-            var amountToRemove = Mathf.Max(logs.Count - maxLogs, 0);
-
-            if (amountToRemove == 0) {
-                return;
-            }
-
-            logs.RemoveRange(0, amountToRemove);
         }
     }
 }

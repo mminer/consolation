@@ -81,17 +81,17 @@ namespace Consolation
         readonly Rect titleBarRect = new Rect(0, 0, 10000, 20);
         Rect windowRect = new Rect(margin, margin, Screen.width - (margin * 2), Screen.height - (margin * 2));
 
-        void OnEnable()
+        void OnEnable ()
         {
             Application.logMessageReceived += HandleLog;
         }
 
-        void OnDisable()
+        void OnDisable ()
         {
             Application.logMessageReceived -= HandleLog;
         }
 
-        void Update()
+        void Update ()
         {
             if (Input.GetKeyDown(toggleKey)) {
                 visible = !visible;
@@ -102,7 +102,7 @@ namespace Consolation
             }
         }
 
-        void OnGUI()
+        void OnGUI ()
         {
             if (visible) {
                 windowRect = GUILayout.Window(123456, windowRect, DrawConsoleWindow, windowTitle);
@@ -113,7 +113,7 @@ namespace Consolation
         /// Displays a window that lists the recorded logs.
         /// </summary>
         /// <param name="windowID">Window ID.</param>
-        void DrawConsoleWindow(int windowID)
+        void DrawConsoleWindow (int windowID)
         {
             DrawLogsList();
             DrawToolbar();
@@ -125,35 +125,35 @@ namespace Consolation
         /// <summary>
         /// Displays a scrollable list of logs.
         /// </summary>
-        void DrawLogsList()
+        void DrawLogsList ()
         {
             scrollPosition = GUILayout.BeginScrollView(scrollPosition);
 
             // Used to determine height of accumulated log labels.
             GUILayout.BeginVertical();
 
-            // Iterate through the recorded logs.
-            for (int i = 0; i < logs.Count; i++) {
-                Log log = logs[i];
+                // Iterate through the recorded logs.
+                for (int i = 0; i < logs.Count; i++) {
+                    Log log = logs[i];
 
-                // Skip logs that are filtered out.
-                if (!logTypeFilters[log.type]) {
-                    continue;
-                }
+                    // Skip logs that are filtered out.
+                    if (!logTypeFilters[log.type]) {
+                        continue;
+                    }
 
-                GUI.contentColor = logTypeColors[log.type];
+                    GUI.contentColor = logTypeColors[log.type];
 
-                // Collapse duplicates into a single log entry with a leading counter
-                if (log.logCount > 1 && collapse) {
-                    GUILayout.Label(string.Format("({0}) {1}", log.logCount, log.message));
+                    // Collapse duplicates into a single log entry with a leading counter
+                    if (log.logCount > 1 && collapse) {
+                        GUILayout.Label(string.Format("({0}) {1}", log.logCount, log.message));
 
-                // Print each log separately
-                } else {
-                    for (int j = 0; j < log.logCount; j++) {
-                        GUILayout.Label(log.message);
+                    // Print each log separately
+                    } else {
+                        for (int j = 0; j < log.logCount; j++) {
+                            GUILayout.Label(log.message);
+                        }
                     }
                 }
-            }
 
             GUILayout.EndVertical();
             Rect innerScrollRect = GUILayoutUtility.GetLastRect();
@@ -172,7 +172,7 @@ namespace Consolation
         /// <summary>
         /// Displays options for filtering and changing the logs list.
         /// </summary>
-        void DrawToolbar()
+        void DrawToolbar ()
         {
             GUILayout.BeginHorizontal();
 
@@ -198,7 +198,7 @@ namespace Consolation
         /// <param name="message">Message.</param>
         /// <param name="stackTrace">Trace of where the message came from.</param>
         /// <param name="type">Type of message (error, exception, warning, assert).</param>
-        void HandleLog(string message, string stackTrace, LogType type)
+        void HandleLog (string message, string stackTrace, LogType type)
         {
             int lastIndex = logs.Count - 1;
             int logCount = 1;
@@ -244,7 +244,7 @@ namespace Consolation
         /// <param name="innerScrollRect">Rect surrounding scroll view content.</param>
         /// <param name="outerScrollRect">Scroll view container.</param>
         /// <returns>Whether scroll view is scrolled to bottom.</returns>
-        bool IsScrolledToBottom(Rect innerScrollRect, Rect outerScrollRect)
+        bool IsScrolledToBottom (Rect innerScrollRect, Rect outerScrollRect)
         {
             float innerScrollHeight = innerScrollRect.height;
 
@@ -263,7 +263,7 @@ namespace Consolation
         /// <summary>
         /// Moves the scroll view down so that the last log is visible.
         /// </summary>
-        void ScrollToBottom()
+        void ScrollToBottom ()
         {
             scrollPosition = new Vector2(0, Int32.MaxValue);
         }
@@ -271,7 +271,7 @@ namespace Consolation
         /// <summary>
         /// Removes old logs that exceed the maximum number allowed if log count restriction is enabled.
         /// </summary>
-        void TrimExcessLogs()
+        void TrimExcessLogs ()
         {
             if (restrictLogCount) {
                 int amountToRemove = Mathf.Max(logs.Count - maxLogs, 0);

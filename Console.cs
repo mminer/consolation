@@ -223,16 +223,15 @@ namespace Consolation
             // Log is a duplicate; update previous log
             if (logCount > 1) {
                 logs[lastIndex] = newLog;
-
             } else {
                 logs.Add(newLog);
 
                 // Remove oldest log if restriction is enabled and limit is met
                 if (restrictLogCount && lastIndex == maxLogs) {
                     logs.RemoveAt(0);
-
+                }
                 // Sanity check; should be impossible to reach
-                } else if (restrictLogCount && lastIndex > maxLogs) {
+                else if (restrictLogCount && lastIndex > maxLogs) {
                     TrimExcessLogs();
                 }
             }
@@ -259,7 +258,7 @@ namespace Consolation
             // Scrolled to bottom (with error margin for float math)
             return Mathf.Approximately(innerScrollHeight, scrollPosition.y + outerScrollHeight);
         }
-         
+
         /// <summary>
         /// Moves the scroll view down so that the last log is visible.
         /// </summary>
@@ -267,7 +266,7 @@ namespace Consolation
         {
             scrollPosition = new Vector2(0, Int32.MaxValue);
         }
-        
+
         /// <summary>
         /// Removes old logs that exceed the maximum number allowed if log count restriction is enabled.
         /// </summary>

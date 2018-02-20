@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace Consolation
@@ -68,14 +69,25 @@ namespace Consolation
             { LogType.Warning, true },
         };
 
+        #region MonoBehaviour Messages
+
+        void OnDisable ()
+        {
+            Application.logMessageReceived -= HandleLog;
+        }
+
         void OnEnable ()
         {
             Application.logMessageReceived += HandleLog;
         }
 
-        void OnDisable ()
+        void OnGUI ()
         {
-            Application.logMessageReceived -= HandleLog;
+            if (!isVisible) {
+                return;
+            }
+
+            windowRect = GUILayout.Window(123456, windowRect, DrawWindow, windowTitle);
         }
 
         void Update ()
@@ -89,59 +101,63 @@ namespace Consolation
             }
         }
 
-        void OnGUI ()
-        {
-            if (!isVisible) {
-                return;
-            }
+        #endregion
 
-            windowRect = GUILayout.Window(123456, windowRect, DrawConsoleWindow, windowTitle);
+        /// <summary>
+        /// Displays a log entry with a badge indicating the number of times it's been consecutively recorded.
+        /// <summary>
+        /// <param name="log">Log information.</param>
+        void DrawCollapsedLog (Log log)
+        {
+            GUILayout.BeginHorizontal();
+
+                GUILayout.Label(log.message);
+                GUILayout.FlexibleSpace();
+                GUILayout.Label(log.logCount.ToString(), GUI.skin.box);
+
+            GUILayout.EndHorizontal();
         }
 
         /// <summary>
-        /// Displays a window that lists the recorded logs.
+        /// Displays a log entry with separate labels for consecutive recordings.
         /// </summary>
-        /// <param name="windowID">Window ID.</param>
-        void DrawConsoleWindow (int windowID)
+        /// <param name="log">Log information.</param>
+        void DrawExpandedLog (Log log)
         {
-            DrawLogsList();
-            DrawToolbar();
+            for (int i = 0; i < log.logCount; i += 1) {
+                GUILayout.Label(log.message);
+            }
+        }
 
-            // Allow the window to be dragged by its title bar.
-            GUI.DragWindow(titleBarRect);
+        /// <summary>
+        /// Displays a log entry.
+        /// </summary>
+        /// <param name="log">Log information.</param>
+        void DrawLog (Log log)
+        {
+            GUI.contentColor = logTypeColors[log.type];
+
+            if (isCollapsed) {
+                DrawCollapsedLog(log);
+            } else {
+                DrawExpandedLog(log);
+            }
         }
 
         /// <summary>
         /// Displays a scrollable list of logs.
         /// </summary>
-        void DrawLogsList ()
+        void DrawLogList ()
         {
             scrollPosition = GUILayout.BeginScrollView(scrollPosition);
 
             // Used to determine height of accumulated log labels.
             GUILayout.BeginVertical();
 
-                // Iterate through the recorded logs.
-                for (int i = 0; i < logs.Count; i++) {
-                    Log log = logs[i];
+                IEnumerable<Log> visibleLogs = logs.Where(IsLogVisible);
 
-                    // Skip logs that are filtered out.
-                    if (!logTypeFilters[log.type]) {
-                        continue;
-                    }
-
-                    GUI.contentColor = logTypeColors[log.type];
-
-                    // Collapse duplicates into a single log entry with a leading counter
-                    if (log.logCount > 1 && isCollapsed) {
-                        GUILayout.Label(string.Format("({0}) {1}", log.logCount, log.message));
-
-                    // Print each log separately
-                    } else {
-                        for (int j = 0; j < log.logCount; j++) {
-                            GUILayout.Label(log.message);
-                        }
-                    }
+                foreach (Log log in visibleLogs) {
+                    DrawLog(log);
                 }
 
             GUILayout.EndVertical();
@@ -182,6 +198,19 @@ namespace Consolation
         }
 
         /// <summary>
+        /// Displays a window that lists the recorded logs.
+        /// </summary>
+        /// <param name="windowID">Window ID.</param>
+        void DrawWindow (int windowID)
+        {
+            DrawLogList();
+            DrawToolbar();
+
+            // Allow the window to be dragged by its title bar.
+            GUI.DragWindow(titleBarRect);
+        }
+
+        /// <summary>
         /// Records a log from the log callback.
         /// </summary>
         /// <param name="message">Message.</param>
@@ -216,6 +245,16 @@ namespace Consolation
                 logs.Add(newLog);
                 TrimExcessLogs();
             }
+        }
+
+        /// <summary>
+        /// Determines whether the user has chosen to hide the given log.
+        /// </summary>
+        /// <param name="log">Log information.</param>
+        /// <returns>Whether the log hasn't been filtered out.</returns>
+        bool IsLogVisible (Log log)
+        {
+            return logTypeFilters[log.type];
         }
 
         /// <summary>

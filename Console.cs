@@ -9,14 +9,6 @@ namespace Consolation
     /// </summary>
     class Console : MonoBehaviour
     {
-        struct Log
-        {
-            public string message;
-            public string stackTrace;
-            public LogType type;
-            public int logCount;
-        }
-
         #region Inspector Settings
 
         /// <summary>
@@ -35,34 +27,21 @@ namespace Consolation
         public float shakeAcceleration = 3f;
 
         /// <summary>
-        /// Whether to only keep a certain number of logs.
-        ///
-        /// Setting this can be helpful if memory usage is a concern.
+        /// Whether to only keep a certain number of logs, useful if memory usage is a concern.
         /// </summary>
         public bool restrictLogCount = false;
 
         /// <summary>
         /// Number of logs to keep before removing old ones.
         /// </summary>
-        public int maxLogs = 1000;
+        public int maxLogCount = 1000;
 
         #endregion
 
-        readonly List<Log> logs = new List<Log>();
-        Vector2 scrollPosition;
-        bool visible;
-        bool collapse;
-
-        Dictionary<LogType, bool> logTypeFilters = new Dictionary<LogType, bool>
-        {
-            { LogType.Assert, true },
-            { LogType.Error, true },
-            { LogType.Exception, true },
-            { LogType.Log, true },
-            { LogType.Warning, true },
-        };
-
-        // Visual elements:
+        static readonly GUIContent clearLabel = new GUIContent("Clear", "Clear the contents of the console.");
+        static readonly GUIContent collapseLabel = new GUIContent("Collapse", "Hide repeated messages.");
+        const int margin = 20;
+        const string windowTitle = "Console";
 
         static readonly Dictionary<LogType, Color> logTypeColors = new Dictionary<LogType, Color>
         {
@@ -73,13 +52,21 @@ namespace Consolation
             { LogType.Warning, Color.yellow },
         };
 
-        const string windowTitle = "Console";
-        const int margin = 20;
-        static readonly GUIContent clearLabel = new GUIContent("Clear", "Clear the contents of the console.");
-        static readonly GUIContent collapseLabel = new GUIContent("Collapse", "Hide repeated messages.");
-
+        bool isCollapsed;
+        bool isVisible;
+        readonly List<Log> logs = new List<Log>();
+        Vector2 scrollPosition;
         readonly Rect titleBarRect = new Rect(0, 0, 10000, 20);
         Rect windowRect = new Rect(margin, margin, Screen.width - (margin * 2), Screen.height - (margin * 2));
+
+        readonly Dictionary<LogType, bool> logTypeFilters = new Dictionary<LogType, bool>
+        {
+            { LogType.Assert, true },
+            { LogType.Error, true },
+            { LogType.Exception, true },
+            { LogType.Log, true },
+            { LogType.Warning, true },
+        };
 
         void OnEnable ()
         {
@@ -94,19 +81,21 @@ namespace Consolation
         void Update ()
         {
             if (Input.GetKeyDown(toggleKey)) {
-                visible = !visible;
+                isVisible = !isVisible;
             }
 
             if (shakeToOpen && Input.acceleration.sqrMagnitude > shakeAcceleration) {
-                visible = true;
+                isVisible = true;
             }
         }
 
         void OnGUI ()
         {
-            if (visible) {
-                windowRect = GUILayout.Window(123456, windowRect, DrawConsoleWindow, windowTitle);
+            if (!isVisible) {
+                return;
             }
+
+            windowRect = GUILayout.Window(123456, windowRect, DrawConsoleWindow, windowTitle);
         }
 
         /// <summary>
@@ -144,7 +133,7 @@ namespace Consolation
                     GUI.contentColor = logTypeColors[log.type];
 
                     // Collapse duplicates into a single log entry with a leading counter
-                    if (log.logCount > 1 && collapse) {
+                    if (log.logCount > 1 && isCollapsed) {
                         GUILayout.Label(string.Format("({0}) {1}", log.logCount, log.message));
 
                     // Print each log separately
@@ -187,7 +176,7 @@ namespace Consolation
                     GUILayout.Space(20);
                 }
 
-                collapse = GUILayout.Toggle(collapse, collapseLabel, GUILayout.ExpandWidth(false));
+                isCollapsed = GUILayout.Toggle(isCollapsed, collapseLabel, GUILayout.ExpandWidth(false));
 
             GUILayout.EndHorizontal();
         }
@@ -225,15 +214,7 @@ namespace Consolation
                 logs[lastIndex] = newLog;
             } else {
                 logs.Add(newLog);
-
-                // Remove oldest log if restriction is enabled and limit is met
-                if (restrictLogCount && lastIndex == maxLogs) {
-                    logs.RemoveAt(0);
-                }
-                // Sanity check; should be impossible to reach
-                else if (restrictLogCount && lastIndex > maxLogs) {
-                    TrimExcessLogs();
-                }
+                TrimExcessLogs();
             }
         }
 
@@ -272,13 +253,28 @@ namespace Consolation
         /// </summary>
         void TrimExcessLogs ()
         {
-            if (restrictLogCount) {
-                int amountToRemove = Mathf.Max(logs.Count - maxLogs, 0);
-
-                if (amountToRemove > 0) {
-                    logs.RemoveRange(0, amountToRemove);
-                }
+            if (!restrictLogCount) {
+                return;
             }
+
+            int amountToRemove = logs.Count - maxLogCount;
+
+            if (amountToRemove <= 0) {
+                return;
+            }
+
+            logs.RemoveRange(0, amountToRemove);
         }
+    }
+
+    /// <summary>
+    /// A basic container for log details.
+    /// </summary>
+    struct Log
+    {
+        public string message;
+        public string stackTrace;
+        public LogType type;
+        public int logCount;
     }
 }

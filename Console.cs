@@ -113,7 +113,7 @@ namespace Consolation
 
                 GUILayout.Label(log.message);
                 GUILayout.FlexibleSpace();
-                GUILayout.Label(log.logCount.ToString(), GUI.skin.box);
+                GUILayout.Label(log.count.ToString(), GUI.skin.box);
 
             GUILayout.EndHorizontal();
         }
@@ -124,7 +124,7 @@ namespace Consolation
         /// <param name="log">Log information.</param>
         void DrawExpandedLog (Log log)
         {
-            for (int i = 0; i < log.logCount; i += 1) {
+            for (int i = 0; i < log.count; i += 1) {
                 GUILayout.Label(log.message);
             }
         }
@@ -211,6 +211,19 @@ namespace Consolation
         }
 
         /// <summary>
+        /// Finds the last recorded log.
+        /// <summary>
+        /// <returns>The last recorded log, or null if the list is empty.</returns>
+        Log? GetLastLog ()
+        {
+            if (logs.Count == 0) {
+                return null;
+            }
+
+            return logs.Last();
+        }
+
+        /// <summary>
         /// Records a log from the log callback.
         /// </summary>
         /// <param name="message">Message.</param>
@@ -218,31 +231,22 @@ namespace Consolation
         /// <param name="type">Type of message (error, exception, warning, assert).</param>
         void HandleLog (string message, string stackTrace, LogType type)
         {
-            int lastIndex = logs.Count - 1;
-            int logCount = 1;
-
-            // Log list not empty
-            if (lastIndex > -1) {
-                Log lastLog = logs[lastIndex];
-
-                // Increment logCount if log matches previous
-                if (message == lastLog.message && type == lastLog.type && stackTrace == lastLog.stackTrace) {
-                    logCount = lastLog.logCount + 1;
-                }
-            }
-
-            Log newLog = new Log {
+            Log log = new Log {
+                count = 1,
                 message = message,
                 stackTrace = stackTrace,
                 type = type,
-                logCount = logCount
             };
 
-            // Log is a duplicate; update previous log
-            if (logCount > 1) {
-                logs[lastIndex] = newLog;
+            Log? lastLog = GetLastLog();
+            bool isDuplicateOfLastLog = lastLog.HasValue && log.Equals(lastLog.Value);
+
+            if (isDuplicateOfLastLog) {
+                // Replace previous log with incremented count instead of adding a new one.
+                log.count = lastLog.Value.count + 1;
+                logs[logs.Count - 1] = log;
             } else {
-                logs.Add(newLog);
+                logs.Add(log);
                 TrimExcessLogs();
             }
         }
@@ -311,9 +315,14 @@ namespace Consolation
     /// </summary>
     struct Log
     {
+        public int count;
         public string message;
         public string stackTrace;
         public LogType type;
-        public int logCount;
+
+        public bool Equals (Log log)
+        {
+            return message == log.message && stackTrace == log.stackTrace && type == log.type;
+        }
     }
 }

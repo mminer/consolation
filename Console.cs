@@ -10,6 +10,8 @@ namespace Consolation
     /// </summary>
     class Console : MonoBehaviour
     {
+        public static Version version = new Version(1, 0, 0);
+
         #region Inspector Settings
 
         /// <summary>

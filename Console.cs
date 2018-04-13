@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -18,6 +18,11 @@ namespace Consolation
         /// The hotkey to show and hide the console window.
         /// </summary>
         public KeyCode toggleKey = KeyCode.BackQuote;
+
+        /// <summary>
+        /// Whether to open as soon as the game starts.
+        /// </summary>
+        public bool openOnStart = false;
 
         /// <summary>
         /// Whether to open the window by shaking the device (mobile-only).
@@ -91,6 +96,14 @@ namespace Consolation
             }
 
             windowRect = GUILayout.Window(123456, windowRect, DrawWindow, windowTitle);
+        }
+
+        void Start()
+        {
+            if (openOnStart)
+            {
+                isVisible = true;
+            }
         }
 
         void Update()

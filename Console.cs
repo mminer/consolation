@@ -80,12 +80,12 @@ namespace Consolation
 
         void OnDisable()
         {
-            Application.logMessageReceived -= HandleLog;
+            Application.logMessageReceivedThreaded -= HandleLog;
         }
 
         void OnEnable()
         {
-            Application.logMessageReceived += HandleLog;
+            Application.logMessageReceivedThreaded += HandleLog;
         }
 
         void OnGUI()

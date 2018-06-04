@@ -63,6 +63,8 @@ namespace Consolation
         bool isCollapsed;
         bool isVisible;
         readonly List<Log> logs = new List<Log>();
+        readonly ConcurrentQueue<Log> queuedLogs = new ConcurrentQueue<Log>();
+
         Vector2 scrollPosition;
         readonly Rect titleBarRect = new Rect(0, 0, 10000, 20);
         Rect windowRect = new Rect(margin, margin, Screen.width - (margin * 2), Screen.height - (margin * 2));
@@ -80,12 +82,12 @@ namespace Consolation
 
         void OnDisable()
         {
-            Application.logMessageReceivedThreaded -= HandleLog;
+            Application.logMessageReceivedThreaded -= HandleLogThreaded;
         }
 
         void OnEnable()
         {
-            Application.logMessageReceivedThreaded += HandleLog;
+            Application.logMessageReceivedThreaded += HandleLogThreaded;
         }
 
         void OnGUI()
@@ -108,6 +110,8 @@ namespace Consolation
 
         void Update()
         {
+            UpdateQueuedLogs();
+
             if (Input.GetKeyDown(toggleKey))
             {
                 isVisible = !isVisible;
@@ -224,15 +228,32 @@ namespace Consolation
             return logs.Last();
         }
 
-        void HandleLog(string message, string stackTrace, LogType type)
+        void UpdateQueuedLogs()
         {
-            var log = new Log {
+            Log log;
+            while (queuedLogs.TryDequeue(out log))
+            {
+                ProcessLogItem(log);
+            }
+        }
+
+        void HandleLogThreaded(string message, string stackTrace, LogType type)
+        {
+            var log = new Log
+            {
                 count = 1,
                 message = message,
                 stackTrace = stackTrace,
                 type = type,
             };
 
+            // Queue the log into a ConcurrentQueue to be processed later in the Unity main thread,
+            // so that we don't get GUI-related errors for logs coming from other threads
+            queuedLogs.Enqueue(log);
+        }
+
+        void ProcessLogItem(Log log)
+        {
             var lastLog = GetLastLog();
             var isDuplicateOfLastLog = lastLog.HasValue && log.Equals(lastLog.Value);
 
@@ -307,6 +328,43 @@ namespace Consolation
         public bool Equals(Log log)
         {
             return message == log.message && stackTrace == log.stackTrace && type == log.type;
+        }
+    }
+
+    /// <summary>
+    /// Alternative to System.Collections.Concurrent.ConcurrentQueue
+    /// (It's only available in .NET 4.0 and greater)
+    /// </summary>
+    /// <remarks>
+    /// It's a bit slow (as it uses locks), and only provides a small subset of the interface
+    /// Overall, the implementation is intended to be simple & robust
+    /// </remarks>
+    public class ConcurrentQueue<T>
+    {
+        private readonly System.Object queueLock = new System.Object();
+        private readonly Queue<T> queue = new Queue<T>();
+
+        public void Enqueue(T item)
+        {
+            lock (queueLock)
+            {
+                queue.Enqueue(item);
+            }
+        }
+
+        public bool TryDequeue(out T result)
+        {
+            lock (queueLock)
+            {
+                if (queue.Count == 0)
+                {
+                    result = default(T);
+                    return false;
+                }
+
+                result = queue.Dequeue();
+                return true;
+            }
         }
     }
 }

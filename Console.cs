@@ -129,7 +129,7 @@ namespace Consolation
         {
             GUILayout.BeginHorizontal();
 
-                GUILayout.Label(log.message);
+                GUILayout.Label(log.GetTruncatedMessage());
                 GUILayout.FlexibleSpace();
                 GUILayout.Label(log.count.ToString(), GUI.skin.box);
 
@@ -140,7 +140,7 @@ namespace Consolation
         {
             for (var i = 0; i < log.count; i += 1)
             {
-                GUILayout.Label(log.message);
+                GUILayout.Label(log.GetTruncatedMessage());
             }
         }
 
@@ -325,9 +325,24 @@ namespace Consolation
         public string stackTrace;
         public LogType type;
 
+        /// <summary>
+        /// The max string length supported by UnityEngine.GUILayout.Label without triggering this error:
+        /// "String too long for TextMeshGenerator. Cutting off characters."
+        /// </summary>
+        private const int MaxMessageLength = 16382;
+
         public bool Equals(Log log)
         {
             return message == log.message && stackTrace == log.stackTrace && type == log.type;
+        }
+        
+        /// <summary>
+        /// Return a truncated message if it exceeds the max message length
+        /// </summary>
+        public string GetTruncatedMessage()
+        {
+            if (string.IsNullOrEmpty(message)) return message;
+            return message.Length <= MaxMessageLength ? message : message.Substring(0, MaxMessageLength);
         }
     }
 

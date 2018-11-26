@@ -335,13 +335,17 @@ namespace Consolation
         {
             return message == log.message && stackTrace == log.stackTrace && type == log.type;
         }
-        
+
         /// <summary>
-        /// Return a truncated message if it exceeds the max message length
+        /// Return a truncated message if it exceeds the max message length.
         /// </summary>
         public string GetTruncatedMessage()
         {
-            if (string.IsNullOrEmpty(message)) return message;
+            if (string.IsNullOrEmpty(message))
+            {
+                return message;
+            }
+
             return message.Length <= MaxMessageLength ? message : message.Substring(0, MaxMessageLength);
         }
     }

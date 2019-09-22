@@ -17,5 +17,5 @@ in the Inspector to open the console on mobile devices.
 
 ## Compatibility
 
-Supports Unity 5, 2017.x, and 2018.x. It hasn't been tested on all the platforms
-that Unity supports but it probably works on most.
+Supports Unity 5, 2017.x, 2018.x, and 2019.x. It hasn't been tested on all the
+platforms that Unity supports but it probably works on most.

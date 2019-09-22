@@ -340,7 +340,7 @@ namespace Consolation
         /// The max string length supported by UnityEngine.GUILayout.Label without triggering this error:
         /// "String too long for TextMeshGenerator. Cutting off characters."
         /// </summary>
-        private const int MaxMessageLength = 16382;
+        const int maxMessageLength = 16382;
 
         public bool Equals(Log log)
         {
@@ -357,7 +357,7 @@ namespace Consolation
                 return message;
             }
 
-            return message.Length <= MaxMessageLength ? message : message.Substring(0, MaxMessageLength);
+            return message.Length <= maxMessageLength ? message : message.Substring(0, maxMessageLength);
         }
     }
 
@@ -369,10 +369,10 @@ namespace Consolation
     /// It's a bit slow (as it uses locks), and only provides a small subset of the interface
     /// Overall, the implementation is intended to be simple & robust
     /// </remarks>
-    public class ConcurrentQueue<T>
+    class ConcurrentQueue<T>
     {
-        private readonly System.Object queueLock = new System.Object();
-        private readonly Queue<T> queue = new Queue<T>();
+        readonly Queue<T> queue = new Queue<T>();
+        readonly object queueLock = new object();
 
         public void Enqueue(T item)
         {

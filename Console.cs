@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -43,6 +43,11 @@ namespace Consolation
         /// Number of logs to keep before removing old ones.
         /// </summary>
         public int maxLogCount = 1000;
+
+        /// <summary>
+        /// Font size to display log entries with.
+        /// </summary>
+        public int logFontSize = 12;
 
         #endregion
 
@@ -125,41 +130,47 @@ namespace Consolation
 
         #endregion
 
-        void DrawCollapsedLog(Log log)
+        void DrawCollapsedLog(Log log, GUIStyle logStyle, GUIStyle badgeStyle)
         {
             GUILayout.BeginHorizontal();
 
-                GUILayout.Label(log.GetTruncatedMessage());
+                GUILayout.Label(log.GetTruncatedMessage(), logStyle);
                 GUILayout.FlexibleSpace();
                 GUILayout.Label(log.count.ToString(), GUI.skin.box);
 
             GUILayout.EndHorizontal();
         }
 
-        void DrawExpandedLog(Log log)
+        void DrawExpandedLog(Log log, GUIStyle logStyle)
         {
             for (var i = 0; i < log.count; i += 1)
             {
-                GUILayout.Label(log.GetTruncatedMessage());
+                GUILayout.Label(log.GetTruncatedMessage(), logStyle);
             }
         }
 
-        void DrawLog(Log log)
+        void DrawLog(Log log, GUIStyle logStyle, GUIStyle badgeStyle)
         {
             GUI.contentColor = logTypeColors[log.type];
 
             if (isCollapsed)
             {
-                DrawCollapsedLog(log);
+                DrawCollapsedLog(log, logStyle, badgeStyle);
             }
             else
             {
-                DrawExpandedLog(log);
+                DrawExpandedLog(log, logStyle);
             }
         }
 
         void DrawLogList()
         {
+            GUIStyle badgeStyle = GUI.skin.box;
+            badgeStyle.fontSize = logFontSize;
+
+            GUIStyle logStyle = GUI.skin.label;
+            logStyle.fontSize = logFontSize;
+
             scrollPosition = GUILayout.BeginScrollView(scrollPosition);
 
             // Used to determine height of accumulated log labels.
@@ -169,7 +180,7 @@ namespace Consolation
 
                 foreach (Log log in visibleLogs)
                 {
-                    DrawLog(log);
+                    DrawLog(log, logStyle, badgeStyle);
                 }
 
             GUILayout.EndVertical();

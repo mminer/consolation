@@ -144,37 +144,29 @@ namespace Consolation
 
         #endregion
 
-        void DrawCollapsedLog(Log log, GUIStyle logStyle, GUIStyle badgeStyle)
-        {
-            GUILayout.BeginHorizontal();
-
-                GUILayout.Label(log.GetTruncatedMessage(), logStyle);
-                GUILayout.FlexibleSpace();
-                GUILayout.Label(log.count.ToString(), GUI.skin.box);
-
-            GUILayout.EndHorizontal();
-        }
-
-        void DrawExpandedLog(Log log, GUIStyle logStyle)
-        {
-            for (var i = 0; i < log.count; i += 1)
-            {
-                GUILayout.Label(log.GetTruncatedMessage(), logStyle);
-            }
-        }
-
         void DrawLog(Log log, GUIStyle logStyle, GUIStyle badgeStyle)
         {
             GUI.contentColor = logTypeColors[log.type];
 
             if (isCollapsed)
             {
-                DrawCollapsedLog(log, logStyle, badgeStyle);
+                // Draw collapsed log with badge indicating count.
+                GUILayout.BeginHorizontal();
+                GUILayout.Label(log.GetTruncatedMessage(), logStyle);
+                GUILayout.FlexibleSpace();
+                GUILayout.Label(log.count.ToString(), GUI.skin.box);
+                GUILayout.EndHorizontal();
             }
             else
             {
-                DrawExpandedLog(log, logStyle);
+                // Draw expanded log.
+                for (var i = 0; i < log.count; i += 1)
+                {
+                    GUILayout.Label(log.GetTruncatedMessage(), logStyle);
+                }
             }
+
+            GUI.contentColor = Color.white;
         }
 
         void DrawLogList()
@@ -207,9 +199,6 @@ namespace Consolation
             {
                 ScrollToBottom();
             }
-
-            // Ensure GUI colour is reset before drawing other components.
-            GUI.contentColor = Color.white;
         }
 
         void DrawToolbar()

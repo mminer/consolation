@@ -7,11 +7,11 @@ namespace Consolation
 {
     /// <summary>
     /// A console to display Unity's debug logs in-game.
+    ///
+    /// Version: 1.1.0
     /// </summary>
     class Console : MonoBehaviour
     {
-        public static Version version = new Version(1, 0, 1);
-
         #region Inspector Settings
 
         /// <summary>

@@ -49,6 +49,11 @@ namespace Consolation
         /// </summary>
         public int logFontSize = 12;
 
+        /// <summary>
+        /// Amount to scale UI by.
+        /// </summary>
+        public float scaleFactor = 1f;
+
         #endregion
 
         static readonly GUIContent clearLabel = new GUIContent("Clear", "Clear the contents of the console.");
@@ -72,7 +77,8 @@ namespace Consolation
 
         Vector2 scrollPosition;
         readonly Rect titleBarRect = new Rect(0, 0, 10000, 20);
-        Rect windowRect = new Rect(margin, margin, Screen.width - (margin * 2), Screen.height - (margin * 2));
+        float windowX = margin;
+        float windowY = margin;
 
         readonly Dictionary<LogType, bool> logTypeFilters = new Dictionary<LogType, bool>
         {
@@ -102,7 +108,15 @@ namespace Consolation
                 return;
             }
 
-            windowRect = GUILayout.Window(123456, windowRect, DrawWindow, windowTitle);
+            GUI.matrix = Matrix4x4.Scale(Vector3.one * scaleFactor);
+
+            float width = (Screen.width / scaleFactor) - (margin * 2);
+            float height = (Screen.height / scaleFactor) - (margin * 2);
+            Rect windowRect = new Rect(windowX, windowY, width, height);
+
+            Rect newWindowRect = GUILayout.Window(123456, windowRect, DrawWindow, windowTitle);
+            windowX = newWindowRect.x;
+            windowY = newWindowRect.y;
         }
 
         void Start()

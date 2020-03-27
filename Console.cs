@@ -136,7 +136,7 @@ namespace Consolation
                 isVisible = !isVisible;
             }
 
-            if (shakeToOpen && Input.acceleration.sqrMagnitude > shakeAcceleration)
+            if (shakeToOpen && Input.touchCount > 2 && Input.acceleration.sqrMagnitude > shakeAcceleration)
             {
                 isVisible = true;
             }

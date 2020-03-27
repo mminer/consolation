@@ -12,7 +12,8 @@ the game itself. This is especially useful on mobile devices.
 
 Attach this script to a game object. The window can be opened with a
 configurable hotkey (defaults to backtick). Alternatively, enable shake-to-open
-in the Inspector to open the console on mobile devices.
+in the Inspector to open the console on mobile devices (shake while
+touching the screen with 3 or more fingers).
 
 
 ## Compatibility

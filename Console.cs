@@ -8,7 +8,7 @@ namespace Consolation
     /// <summary>
     /// A console to display Unity's debug logs in-game.
     ///
-    /// Version: 1.1.0
+    /// Version: 1.1.2
     /// </summary>
     class Console : MonoBehaviour
     {
@@ -30,9 +30,21 @@ namespace Consolation
         public bool shakeToOpen = true;
 
         /// <summary>
+        /// Also require touches while shaking to avoid accidental shakes.
+        /// </summary>
+        public bool shakeRequiresTouch = false;
+
+        /// <summary>
         /// The (squared) acceleration above which the window should open.
         /// </summary>
         public float shakeAcceleration = 3f;
+
+        /// <summary>
+        /// The number of seconds that have to pass between visibility toggles.
+        /// This threshold prevents closing again while shaking to open.
+        /// </summary>
+        public float toggleThresholdSeconds = .5f;
+        float lastToggleTime;
 
         /// <summary>
         /// Whether to only keep a certain number of logs, useful if memory usage is a concern.
@@ -131,14 +143,20 @@ namespace Consolation
         {
             UpdateQueuedLogs();
 
+            float curTime = Time.realtimeSinceStartup;
+
             if (Input.GetKeyDown(toggleKey))
             {
                 isVisible = !isVisible;
             }
 
-            if (shakeToOpen && Input.acceleration.sqrMagnitude > shakeAcceleration)
+            if (shakeToOpen &&
+                Input.acceleration.sqrMagnitude > shakeAcceleration &&
+                curTime - lastToggleTime >= toggleThresholdSeconds &&
+                (!shakeRequiresTouch || Input.touchCount > 2))
             {
-                isVisible = true;
+                isVisible = !isVisible;
+                lastToggleTime = curTime;
             }
         }
 
@@ -182,12 +200,12 @@ namespace Consolation
             // Used to determine height of accumulated log labels.
             GUILayout.BeginVertical();
 
-                var visibleLogs = logs.Where(IsLogVisible);
+            var visibleLogs = logs.Where(IsLogVisible);
 
-                foreach (Log log in visibleLogs)
-                {
-                    DrawLog(log, logStyle, badgeStyle);
-                }
+            foreach (Log log in visibleLogs)
+            {
+                DrawLog(log, logStyle, badgeStyle);
+            }
 
             GUILayout.EndVertical();
             var innerScrollRect = GUILayoutUtility.GetLastRect();
@@ -205,20 +223,20 @@ namespace Consolation
         {
             GUILayout.BeginHorizontal();
 
-                if (GUILayout.Button(clearLabel))
-                {
-                    logs.Clear();
-                }
+            if (GUILayout.Button(clearLabel))
+            {
+                logs.Clear();
+            }
 
-                foreach (LogType logType in Enum.GetValues(typeof(LogType)))
-                {
-                    var currentState = logTypeFilters[logType];
-                    var label = logType.ToString();
-                    logTypeFilters[logType] = GUILayout.Toggle(currentState, label, GUILayout.ExpandWidth(false));
-                    GUILayout.Space(20);
-                }
+            foreach (LogType logType in Enum.GetValues(typeof(LogType)))
+            {
+                var currentState = logTypeFilters[logType];
+                var label = logType.ToString();
+                logTypeFilters[logType] = GUILayout.Toggle(currentState, label, GUILayout.ExpandWidth(false));
+                GUILayout.Space(20);
+            }
 
-                isCollapsed = GUILayout.Toggle(isCollapsed, collapseLabel, GUILayout.ExpandWidth(false));
+            isCollapsed = GUILayout.Toggle(isCollapsed, collapseLabel, GUILayout.ExpandWidth(false));
 
             GUILayout.EndHorizontal();
         }

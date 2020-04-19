@@ -28,6 +28,11 @@ namespace Consolation
         /// Whether to open the window by shaking the device (mobile-only).
         /// </summary>
         public bool shakeToOpen = true;
+        
+        /// <summary>
+        /// Also require touches while shaking to avoid accidental shakes.
+        /// </summary>
+        public bool shakeRequiresTouch = false;
 
         /// <summary>
         /// The (squared) acceleration above which the window should open.
@@ -136,9 +141,11 @@ namespace Consolation
                 isVisible = !isVisible;
             }
 
-            if (shakeToOpen && Input.touchCount > 2 && Input.acceleration.sqrMagnitude > shakeAcceleration)
+            if (shakeToOpen &&
+                (!shakeRequiresTouch || Input.touchCount > 2) &&
+                Input.acceleration.sqrMagnitude > shakeAcceleration)
             {
-                isVisible = true;
+                isVisible = !isVisible;
             }
         }
 

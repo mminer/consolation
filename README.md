@@ -1,4 +1,4 @@
-# Consolation
+# Unity Console
 
 Unity's editor console is indispensible, but retrieving debug logs and warnings
 outside the editor is difficult. To make it easier, this console displays

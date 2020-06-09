@@ -3,21 +3,21 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-namespace Consolation
+namespace TFOM.UnityConsole
 {
     /// <summary>
     /// A console to display Unity's debug logs in-game.
     ///
     /// Version: 1.1.2
     /// </summary>
-    class Console : MonoBehaviour
+    class UnityConsole : MonoBehaviour
     {
         #region Inspector Settings
 
         /// <summary>
         /// The hotkey to show and hide the console window.
         /// </summary>
-        public KeyCode toggleKey = KeyCode.BackQuote;
+        public KeyCode toggleKey = KeyCode.Comma;
 
         /// <summary>
         /// Whether to open as soon as the game starts.
@@ -71,7 +71,7 @@ namespace Consolation
         static readonly GUIContent clearLabel = new GUIContent("Clear", "Clear the contents of the console.");
         static readonly GUIContent collapseLabel = new GUIContent("Collapse", "Hide repeated messages.");
         const int margin = 20;
-        const string windowTitle = "Console";
+        const string windowTitle = "Unity Debug Console";
 
         static readonly Dictionary<LogType, Color> logTypeColors = new Dictionary<LogType, Color>
         {

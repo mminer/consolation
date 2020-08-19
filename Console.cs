@@ -29,6 +29,7 @@ namespace Consolation
         /// </summary>
         public bool shakeToOpen = true;
 
+        private bool onlyLastMessage = false;
         /// <summary>
         /// Also require touches while shaking to avoid accidental shakes.
         /// </summary>
@@ -69,6 +70,7 @@ namespace Consolation
         #endregion
 
         static readonly GUIContent clearLabel = new GUIContent("Clear", "Clear the contents of the console.");
+        static readonly GUIContent onlyOne = new GUIContent("Show Only Last Message", "Show only last messages.");
         static readonly GUIContent collapseLabel = new GUIContent("Collapse", "Hide repeated messages.");
         const int margin = 20;
         const string windowTitle = "Console";
@@ -201,7 +203,10 @@ namespace Consolation
             GUILayout.BeginVertical();
 
             var visibleLogs = logs.Where(IsLogVisible);
-
+            if (onlyLastMessage)
+            {
+                visibleLogs = new List<Log> { visibleLogs.Last() };
+            }
             foreach (Log log in visibleLogs)
             {
                 DrawLog(log, logStyle, badgeStyle);
@@ -237,6 +242,7 @@ namespace Consolation
             }
 
             isCollapsed = GUILayout.Toggle(isCollapsed, collapseLabel, GUILayout.ExpandWidth(false));
+            onlyLastMessage = GUILayout.Toggle(onlyLastMessage, onlyOne, GUILayout.ExpandWidth(false));
 
             GUILayout.EndHorizontal();
         }

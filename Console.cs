@@ -151,9 +151,11 @@ namespace Consolation
             {
                 // Draw collapsed log with badge indicating count.
                 GUILayout.BeginHorizontal();
-                GUILayout.Label(log.GetTruncatedMessage(), logStyle);
-                GUILayout.FlexibleSpace();
-                GUILayout.Label(log.count.ToString(), GUI.skin.box);
+                {
+                    GUILayout.Label(log.GetTruncatedMessage(), logStyle);
+                    GUILayout.FlexibleSpace();
+                    GUILayout.Label(log.count.ToString(), GUI.skin.box);
+                }
                 GUILayout.EndHorizontal();
             }
             else
@@ -180,18 +182,21 @@ namespace Consolation
 
             // Used to determine height of accumulated log labels.
             GUILayout.BeginVertical();
-
-            var visibleLogs = logs.Where(IsLogVisible);
-            if (onlyLastMessage)
             {
-                visibleLogs = new List<Log> { visibleLogs.Last() };
-            }
-            foreach (Log log in visibleLogs)
-            {
-                DrawLog(log, logStyle, badgeStyle);
-            }
+                var visibleLogs = logs.Where(IsLogVisible);
 
+                if (onlyLastMessage)
+                {
+                    visibleLogs = new List<Log> { visibleLogs.Last() };
+                }
+
+                foreach (Log log in visibleLogs)
+                {
+                    DrawLog(log, logStyle, badgeStyle);
+                }
+            }
             GUILayout.EndVertical();
+
             var innerScrollRect = GUILayoutUtility.GetLastRect();
             GUILayout.EndScrollView();
             var outerScrollRect = GUILayoutUtility.GetLastRect();
@@ -206,23 +211,23 @@ namespace Consolation
         void DrawToolbar()
         {
             GUILayout.BeginHorizontal();
-
-            if (GUILayout.Button(clearLabel))
             {
-                logs.Clear();
+                if (GUILayout.Button(clearLabel))
+                {
+                    logs.Clear();
+                }
+
+                foreach (LogType logType in Enum.GetValues(typeof(LogType)))
+                {
+                    var currentState = logTypeFilters[logType];
+                    var label = logType.ToString();
+                    logTypeFilters[logType] = GUILayout.Toggle(currentState, label, GUILayout.ExpandWidth(false));
+                    GUILayout.Space(20);
+                }
+
+                isCollapsed = GUILayout.Toggle(isCollapsed, collapseLabel, GUILayout.ExpandWidth(false));
+                onlyLastMessage = GUILayout.Toggle(onlyLastMessage, onlyOne, GUILayout.ExpandWidth(false));
             }
-
-            foreach (LogType logType in Enum.GetValues(typeof(LogType)))
-            {
-                var currentState = logTypeFilters[logType];
-                var label = logType.ToString();
-                logTypeFilters[logType] = GUILayout.Toggle(currentState, label, GUILayout.ExpandWidth(false));
-                GUILayout.Space(20);
-            }
-
-            isCollapsed = GUILayout.Toggle(isCollapsed, collapseLabel, GUILayout.ExpandWidth(false));
-            onlyLastMessage = GUILayout.Toggle(onlyLastMessage, onlyOne, GUILayout.ExpandWidth(false));
-
             GUILayout.EndHorizontal();
         }
 

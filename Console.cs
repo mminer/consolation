@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor;
 using UnityEngine;
 
 namespace Consolation
@@ -14,58 +15,35 @@ namespace Consolation
     {
         #region Inspector Settings
 
-        /// <summary>
-        /// The hotkey to show and hide the console window.
-        /// </summary>
-        public KeyCode toggleKey = KeyCode.BackQuote;
+        [SerializeField, Tooltip("Hotkey to show and hide the console.")]
+        KeyCode toggleKey = KeyCode.BackQuote;
 
-        /// <summary>
-        /// Whether to open as soon as the game starts.
-        /// </summary>
-        public bool openOnStart = false;
+        [SerializeField, Tooltip("Whether to open as soon as the game starts.")]
+        bool openOnStart;
 
-        /// <summary>
-        /// Whether to open the window by shaking the device (mobile-only).
-        /// </summary>
-        public bool shakeToOpen = true;
+        [SerializeField, Tooltip("Whether to open the window by shaking the device (mobile-only).")]
+        bool shakeToOpen = true;
 
-        private bool onlyLastMessage = false;
-        /// <summary>
-        /// Also require touches while shaking to avoid accidental shakes.
-        /// </summary>
-        public bool shakeRequiresTouch = false;
+        [SerializeField, Tooltip("Whether to require touches while shaking to avoid accidental shakes.")]
+        bool shakeRequiresTouch;
 
-        /// <summary>
-        /// The (squared) acceleration above which the window should open.
-        /// </summary>
-        public float shakeAcceleration = 3f;
+        [SerializeField, Tooltip("Acceleration (squared) above which to open the console.")]
+        float shakeAcceleration = 3f;
 
-        /// <summary>
-        /// The number of seconds that have to pass between visibility toggles.
-        /// This threshold prevents closing again while shaking to open.
-        /// </summary>
-        public float toggleThresholdSeconds = .5f;
-        float lastToggleTime;
+        [SerializeField, Tooltip("Number of seconds that need to pass between visibility toggles. This threshold prevents closing again while shaking to open.")]
+        float toggleThresholdSeconds = .5f;
 
-        /// <summary>
-        /// Whether to only keep a certain number of logs, useful if memory usage is a concern.
-        /// </summary>
-        public bool restrictLogCount = false;
+        [SerializeField, Tooltip("Whether to keep a limited number of logs. Useful if memory usage is a concern.")]
+        bool restrictLogCount;
 
-        /// <summary>
-        /// Number of logs to keep before removing old ones.
-        /// </summary>
-        public int maxLogCount = 1000;
+        [SerializeField, Tooltip("Number of logs to keep before removing old ones.")]
+        int maxLogCount = 1000;
 
-        /// <summary>
-        /// Font size to display log entries with.
-        /// </summary>
-        public int logFontSize = 12;
+        [SerializeField, Tooltip("Font size to display log entries with.")]
+        int logFontSize = 12;
 
-        /// <summary>
-        /// Amount to scale UI by.
-        /// </summary>
-        public float scaleFactor = 1f;
+        [SerializeField, Tooltip("Amount to scale UI by.")]
+        float scaleFactor = 1f;
 
         #endregion
 
@@ -86,9 +64,10 @@ namespace Consolation
 
         bool isCollapsed;
         bool isVisible;
+        float lastToggleTime;
         readonly List<Log> logs = new List<Log>();
+        bool onlyLastMessage;
         readonly ConcurrentQueue<Log> queuedLogs = new ConcurrentQueue<Log>();
-
         Vector2 scrollPosition;
         readonly Rect titleBarRect = new Rect(0, 0, 10000, 20);
         float windowX = margin;
@@ -424,4 +403,64 @@ namespace Consolation
             }
         }
     }
+
+#if UNITY_EDITOR
+
+    [CustomEditor(typeof(Console))]
+    class ConsoleEditor : Editor
+    {
+        SerializedProperty toggleKey;
+        SerializedProperty openOnStart;
+        SerializedProperty shakeToOpen;
+        SerializedProperty shakeRequiresTouch;
+        SerializedProperty shakeAcceleration;
+        SerializedProperty toggleThresholdSeconds;
+        SerializedProperty restrictLogCount;
+        SerializedProperty maxLogCount;
+        SerializedProperty logFontSize;
+        SerializedProperty scaleFactor;
+
+        void OnEnable()
+        {
+            toggleKey = serializedObject.FindProperty("toggleKey");
+            openOnStart = serializedObject.FindProperty("openOnStart");
+            shakeToOpen = serializedObject.FindProperty("shakeToOpen");
+            shakeRequiresTouch = serializedObject.FindProperty("shakeRequiresTouch");
+            shakeAcceleration = serializedObject.FindProperty("shakeAcceleration");
+            toggleThresholdSeconds = serializedObject.FindProperty("toggleThresholdSeconds");
+            restrictLogCount = serializedObject.FindProperty("restrictLogCount");
+            maxLogCount = serializedObject.FindProperty("maxLogCount");
+            logFontSize = serializedObject.FindProperty("logFontSize");
+            scaleFactor = serializedObject.FindProperty("scaleFactor");
+        }
+
+        public override void OnInspectorGUI()
+        {
+            EditorGUILayout.PropertyField(toggleKey);
+            EditorGUILayout.PropertyField(openOnStart);
+            EditorGUILayout.PropertyField(shakeToOpen);
+
+            using (new EditorGUI.DisabledScope(!shakeToOpen.boolValue))
+            using (new EditorGUI.IndentLevelScope())
+            {
+                EditorGUILayout.PropertyField(shakeRequiresTouch);
+                EditorGUILayout.PropertyField(shakeAcceleration);
+            }
+
+            EditorGUILayout.PropertyField(toggleThresholdSeconds);
+            EditorGUILayout.PropertyField(restrictLogCount);
+
+            using (new EditorGUI.DisabledScope(!restrictLogCount.boolValue))
+            using (new EditorGUI.IndentLevelScope())
+            {
+                EditorGUILayout.PropertyField(maxLogCount);
+            }
+
+            EditorGUILayout.PropertyField(logFontSize);
+            EditorGUILayout.PropertyField(scaleFactor);
+            serializedObject.ApplyModifiedProperties();
+        }
+    }
+
+#endif
 }

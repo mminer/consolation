@@ -142,7 +142,7 @@ namespace Consolation
 
         #endregion
 
-        void DrawLog(Log log, GUIStyle logStyle, GUIStyle badgeStyle)
+        void DrawLog(Log log, GUIStyle logStyle)
         {
             GUI.contentColor = logTypeColors[log.type];
 
@@ -171,9 +171,6 @@ namespace Consolation
 
         void DrawLogList()
         {
-            GUIStyle badgeStyle = GUI.skin.box;
-            badgeStyle.fontSize = logFontSize;
-
             GUIStyle logStyle = GUI.skin.label;
             logStyle.fontSize = logFontSize;
 
@@ -188,7 +185,7 @@ namespace Consolation
 
                     if (lastVisibleLog.HasValue)
                     {
-                        DrawLog(lastVisibleLog.Value, logStyle, badgeStyle);
+                        DrawLog(lastVisibleLog.Value, logStyle);
                     }
                 }
                 else
@@ -200,7 +197,7 @@ namespace Consolation
                             continue;
                         }
 
-                        DrawLog(log, logStyle, badgeStyle);
+                        DrawLog(log, logStyle);
                     }
                 }
             }

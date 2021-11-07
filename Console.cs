@@ -102,11 +102,11 @@ namespace Consolation
 
             GUI.matrix = Matrix4x4.Scale(Vector3.one * scaleFactor);
 
-            float width = (Screen.width / scaleFactor) - (margin * 2);
-            float height = (Screen.height / scaleFactor) - (margin * 2);
-            Rect windowRect = new Rect(windowX, windowY, width, height);
+            var width = (Screen.width / scaleFactor) - (margin * 2);
+            var height = (Screen.height / scaleFactor) - (margin * 2);
+            var windowRect = new Rect(windowX, windowY, width, height);
 
-            Rect newWindowRect = GUILayout.Window(123456, windowRect, DrawWindow, windowTitle);
+            var newWindowRect = GUILayout.Window(123456, windowRect, DrawWindow, windowTitle);
             windowX = newWindowRect.x;
             windowY = newWindowRect.y;
         }
@@ -123,8 +123,6 @@ namespace Consolation
         {
             UpdateQueuedLogs();
 
-            float curTime = Time.realtimeSinceStartup;
-
             if (Input.GetKeyDown(toggleKey))
             {
                 isVisible = !isVisible;
@@ -132,11 +130,11 @@ namespace Consolation
 
             if (shakeToOpen &&
                 Input.acceleration.sqrMagnitude > shakeAcceleration &&
-                curTime - lastToggleTime >= toggleThresholdSeconds &&
+                Time.realtimeSinceStartup - lastToggleTime >= toggleThresholdSeconds &&
                 (!shakeRequiresTouch || Input.touchCount > 2))
             {
                 isVisible = !isVisible;
-                lastToggleTime = curTime;
+                lastToggleTime = Time.realtimeSinceStartup;
             }
         }
 
@@ -144,7 +142,7 @@ namespace Consolation
 
         void DrawLog(Log log, GUIStyle logStyle)
         {
-            GUI.contentColor = logTypeColors[log.type];
+            GUI.contentColor = logTypeColors[log.Type];
 
             if (isCollapsed)
             {
@@ -153,14 +151,14 @@ namespace Consolation
                 {
                     GUILayout.Label(log.GetTruncatedMessage(), logStyle);
                     GUILayout.FlexibleSpace();
-                    GUILayout.Label(log.count.ToString(), GUI.skin.box);
+                    GUILayout.Label(log.Count.ToString(), GUI.skin.box);
                 }
                 GUILayout.EndHorizontal();
             }
             else
             {
                 // Draw expanded log.
-                for (var i = 0; i < log.count; i += 1)
+                for (var i = 0; i < log.Count; i += 1)
                 {
                     GUILayout.Label(log.GetTruncatedMessage(), logStyle);
                 }
@@ -171,7 +169,7 @@ namespace Consolation
 
         void DrawLogList()
         {
-            GUIStyle logStyle = GUI.skin.label;
+            var logStyle = GUI.skin.label;
             logStyle.fontSize = logFontSize;
 
             scrollPosition = GUILayout.BeginScrollView(scrollPosition);
@@ -248,8 +246,7 @@ namespace Consolation
 
         void UpdateQueuedLogs()
         {
-            Log log;
-            while (queuedLogs.TryDequeue(out log))
+            while (queuedLogs.TryDequeue(out var log))
             {
                 ProcessLogItem(log);
             }
@@ -274,10 +271,10 @@ namespace Consolation
         {
             var log = new Log
             {
-                count = 1,
-                message = message,
-                stackTrace = stackTrace,
-                type = type,
+                Count = 1,
+                Message = message,
+                StackTrace = stackTrace,
+                Type = type,
             };
 
             // Queue the log into a ConcurrentQueue to be processed later in the Unity main thread,
@@ -293,7 +290,7 @@ namespace Consolation
             if (isDuplicateOfLastLog)
             {
                 // Replace previous log with incremented count instead of adding a new one.
-                log.count = lastLog.Value.count + 1;
+                log.Count = lastLog.Value.Count + 1;
                 logs[logs.Count - 1] = log;
             }
             else
@@ -305,7 +302,7 @@ namespace Consolation
 
         bool IsLogVisible(Log log)
         {
-            return logTypeFilters[log.type];
+            return logTypeFilters[log.Type];
         }
 
         bool IsScrolledToBottom(Rect innerScrollRect, Rect outerScrollRect)
@@ -353,10 +350,10 @@ namespace Consolation
     /// </summary>
     struct Log
     {
-        public int count;
-        public string message;
-        public string stackTrace;
-        public LogType type;
+        public int Count;
+        public string Message;
+        public string StackTrace;
+        public LogType Type;
 
         /// <summary>
         /// The max string length supported by UnityEngine.GUILayout.Label without triggering this error:
@@ -366,20 +363,20 @@ namespace Consolation
 
         public bool Equals(Log log)
         {
-            return message == log.message && stackTrace == log.stackTrace && type == log.type;
+            return Message == log.Message && StackTrace == log.StackTrace && Type == log.Type;
         }
 
         /// <summary>
-        /// Return a truncated message if it exceeds the max message length.
+        /// Return a truncated Message if it exceeds the max Message length.
         /// </summary>
         public string GetTruncatedMessage()
         {
-            if (string.IsNullOrEmpty(message))
+            if (string.IsNullOrEmpty(Message))
             {
-                return message;
+                return Message;
             }
 
-            return message.Length <= maxMessageLength ? message : message.Substring(0, maxMessageLength);
+            return Message.Length <= maxMessageLength ? Message : Message.Substring(0, maxMessageLength);
         }
     }
 

@@ -46,8 +46,8 @@ namespace Consolation
 
         #endregion
 
-        static readonly GUIContent clearLabel = new GUIContent("Clear", "Clear the contents of the console.");
-        static readonly GUIContent onlyOne = new GUIContent("Show Only Last Message", "Show only last messages.");
+        static readonly GUIContent clearLabel = new GUIContent("Clear", "Clear contents of console.");
+        static readonly GUIContent onlyLastLogLabel = new GUIContent("Only Last Log", "Show only most recent log.");
         static readonly GUIContent collapseLabel = new GUIContent("Collapse", "Hide repeated messages.");
         const int margin = 20;
         const string windowTitle = "Console";
@@ -65,7 +65,7 @@ namespace Consolation
         bool isVisible;
         float lastToggleTime;
         readonly List<Log> logs = new List<Log>();
-        bool onlyLastMessage;
+        bool onlyLastLog;
         readonly ConcurrentQueue<Log> queuedLogs = new ConcurrentQueue<Log>();
         Vector2 scrollPosition;
         readonly Rect titleBarRect = new Rect(0, 0, 10000, 20);
@@ -182,7 +182,7 @@ namespace Consolation
             // Used to determine height of accumulated log labels.
             GUILayout.BeginVertical();
             {
-                if (onlyLastMessage)
+                if (onlyLastLog)
                 {
                     var lastVisibleLog = GetLastVisibleLog();
 
@@ -235,7 +235,7 @@ namespace Consolation
                 }
 
                 isCollapsed = GUILayout.Toggle(isCollapsed, collapseLabel, GUILayout.ExpandWidth(false));
-                onlyLastMessage = GUILayout.Toggle(onlyLastMessage, onlyOne, GUILayout.ExpandWidth(false));
+                onlyLastLog = GUILayout.Toggle(onlyLastLog, onlyLastLogLabel, GUILayout.ExpandWidth(false));
             }
             GUILayout.EndHorizontal();
         }

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
@@ -183,16 +182,26 @@ namespace Consolation
             // Used to determine height of accumulated log labels.
             GUILayout.BeginVertical();
             {
-                var visibleLogs = logs.Where(IsLogVisible);
-
                 if (onlyLastMessage)
                 {
-                    visibleLogs = new List<Log> { visibleLogs.Last() };
-                }
+                    var lastVisibleLog = GetLastVisibleLog();
 
-                foreach (Log log in visibleLogs)
+                    if (lastVisibleLog.HasValue)
+                    {
+                        DrawLog(lastVisibleLog.Value, logStyle, badgeStyle);
+                    }
+                }
+                else
                 {
-                    DrawLog(log, logStyle, badgeStyle);
+                    foreach (var log in logs)
+                    {
+                        if (!IsLogVisible(log))
+                        {
+                            continue;
+                        }
+
+                        DrawLog(log, logStyle, badgeStyle);
+                    }
                 }
             }
             GUILayout.EndVertical();
@@ -240,16 +249,6 @@ namespace Consolation
             GUI.DragWindow(titleBarRect);
         }
 
-        Log? GetLastLog()
-        {
-            if (logs.Count == 0)
-            {
-                return null;
-            }
-
-            return logs.Last();
-        }
-
         void UpdateQueuedLogs()
         {
             Log log;
@@ -257,6 +256,21 @@ namespace Consolation
             {
                 ProcessLogItem(log);
             }
+        }
+
+        Log? GetLastVisibleLog()
+        {
+            for (var i = logs.Count - 1; i >= 0; i--)
+            {
+                var log = logs[i];
+
+                if (IsLogVisible(log))
+                {
+                    return log;
+                }
+            }
+
+            return null;
         }
 
         void HandleLogThreaded(string message, string stackTrace, LogType type)
@@ -276,7 +290,7 @@ namespace Consolation
 
         void ProcessLogItem(Log log)
         {
-            var lastLog = GetLastLog();
+            var lastLog = logs.Count > 0 ? logs[logs.Count - 1] : (Log?)null;
             var isDuplicateOfLastLog = lastLog.HasValue && log.Equals(lastLog.Value);
 
             if (isDuplicateOfLastLog)

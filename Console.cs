@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
-using UnityEditor;
 using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace Consolation
 {
@@ -37,6 +39,9 @@ namespace Consolation
 
         [SerializeField, Tooltip("Number of logs to keep before removing old ones.")]
         int maxLogCount = 1000;
+
+        [SerializeField, Tooltip("Whether log messages are collapsed by default or not.")]
+        bool collapseLogOnStart;
 
         [SerializeField, Tooltip("Font size to display log entries with.")]
         int logFontSize = 12;
@@ -116,6 +121,11 @@ namespace Consolation
             if (openOnStart)
             {
                 isVisible = true;
+            }
+
+            if (collapseLogOnStart)
+            {
+                isCollapsed = true;
             }
         }
 
@@ -430,6 +440,7 @@ namespace Consolation
         SerializedProperty toggleThresholdSeconds;
         SerializedProperty restrictLogCount;
         SerializedProperty maxLogCount;
+        SerializedProperty collapseLogOnStart;
         SerializedProperty logFontSize;
         SerializedProperty scaleFactor;
 
@@ -443,6 +454,7 @@ namespace Consolation
             toggleThresholdSeconds = serializedObject.FindProperty("toggleThresholdSeconds");
             restrictLogCount = serializedObject.FindProperty("restrictLogCount");
             maxLogCount = serializedObject.FindProperty("maxLogCount");
+            collapseLogOnStart = serializedObject.FindProperty("collapseLogOnStart");
             logFontSize = serializedObject.FindProperty("logFontSize");
             scaleFactor = serializedObject.FindProperty("scaleFactor");
         }
@@ -469,6 +481,7 @@ namespace Consolation
                 EditorGUILayout.PropertyField(maxLogCount);
             }
 
+            EditorGUILayout.PropertyField(collapseLogOnStart);
             EditorGUILayout.PropertyField(logFontSize);
             EditorGUILayout.PropertyField(scaleFactor);
             serializedObject.ApplyModifiedProperties();

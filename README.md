@@ -4,7 +4,7 @@ It's difficult to retrieve logs and warnings from Unity outside the editor.  To
 make it easier, this console displays output from `Debug` in the game itself.
 This is especially useful on mobile devices.
 
-![Console in Unity game](http://matthewminer.com/images/consolation@2x.png#2)
+![Console in Unity game](https://matthewminer.com/images/consolation.png)
 
 
 ## Installing
@@ -21,7 +21,7 @@ Alternatively, add the package to your project via
 https://github.com/mminer/consolation.git. You can also clone the repository and
 point UPM to your local copy.
 
-![Adding package to UPM](http://matthewminer.com/images/consolation-upm.gif)
+![Adding package to UPM](https://matthewminer.com/images/consolation-upm.gif)
 
 
 ## Using
@@ -38,7 +38,7 @@ Several other settings like font size and the maximum log count are also
 configurable in the inspector.
 
 ![Console component
-inspector](http://matthewminer.com/images/consolation-inspector.png)
+inspector](https://matthewminer.com/images/consolation-inspector.png)
 
 
 ## Compatibility

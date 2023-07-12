@@ -58,6 +58,9 @@ namespace Consolation
         [SerializeField, Tooltip("Amount to scale UI by.")]
         float scaleFactor = 1f;
 
+        [SerializeField, Tooltip("Custom styles to apply to window.")]
+        GUISkin skin;
+
         #endregion
 
         static readonly GUIContent clearLabel = new GUIContent("Clear", "Clear contents of console.");
@@ -114,6 +117,13 @@ namespace Consolation
                 return;
             }
 
+            var previousGUISkin = GUI.skin;
+
+            if (skin != null)
+            {
+                GUI.skin = skin;
+            }
+
             GUI.matrix = Matrix4x4.Scale(Vector3.one * scaleFactor);
 
             var width = (Screen.width / scaleFactor) - (margin * 2);
@@ -123,6 +133,8 @@ namespace Consolation
             var newWindowRect = GUILayout.Window(123456, windowRect, DrawWindow, windowTitle);
             windowX = newWindowRect.x;
             windowY = newWindowRect.y;
+
+            GUI.skin = previousGUISkin;
         }
 
         void Start()
@@ -497,6 +509,7 @@ namespace Consolation
         SerializedProperty collapseLogOnStart;
         SerializedProperty logFontSize;
         SerializedProperty scaleFactor;
+        SerializedProperty skin;
 
         void OnEnable()
         {
@@ -511,6 +524,7 @@ namespace Consolation
             collapseLogOnStart = serializedObject.FindProperty("collapseLogOnStart");
             logFontSize = serializedObject.FindProperty("logFontSize");
             scaleFactor = serializedObject.FindProperty("scaleFactor");
+            skin = serializedObject.FindProperty("skin");
         }
 
         public override void OnInspectorGUI()
@@ -536,8 +550,14 @@ namespace Consolation
             }
 
             EditorGUILayout.PropertyField(collapseLogOnStart);
+
+            EditorGUILayout.Space();
+            GUILayout.Label("Style", EditorStyles.boldLabel);
+
             EditorGUILayout.PropertyField(logFontSize);
             EditorGUILayout.PropertyField(scaleFactor);
+            EditorGUILayout.PropertyField(skin);
+
             serializedObject.ApplyModifiedProperties();
         }
     }

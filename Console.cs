@@ -66,6 +66,7 @@ namespace Consolation
         static readonly GUIContent clearLabel = new GUIContent("Clear", "Clear contents of console.");
         static readonly GUIContent onlyLastLogLabel = new GUIContent("Only Last Log", "Show only most recent log.");
         static readonly GUIContent collapseLabel = new GUIContent("Collapse", "Hide repeated messages.");
+        static GUIStyle dividerStyle;
         const int margin = 20;
         const string windowTitle = "Console";
 
@@ -83,11 +84,12 @@ namespace Consolation
         bool isVisible;
         float lastToggleTime;
         readonly List<Log> logs = new List<Log>();
+        Vector2 logsScrollPosition;
         readonly ConcurrentQueue<Log> queuedLogs = new ConcurrentQueue<Log>();
-        Vector2 scrollPosition;
+        int? selectedLogIndex;
+        Vector2 stackTraceScrollPosition;
         readonly Rect titleBarRect = new Rect(0, 0, 10000, 20);
-        float windowX = margin;
-        float windowY = margin;
+        Rect windowRect = new Rect(margin, margin, 0, 0);
 
         readonly Dictionary<LogType, bool> logTypeFilters = new Dictionary<LogType, bool>
         {
@@ -126,13 +128,9 @@ namespace Consolation
 
             GUI.matrix = Matrix4x4.Scale(Vector3.one * scaleFactor);
 
-            var width = (Screen.width / scaleFactor) - (margin * 2);
-            var height = (Screen.height / scaleFactor) - (margin * 2);
-            var windowRect = new Rect(windowX, windowY, width, height);
-
-            var newWindowRect = GUILayout.Window(123456, windowRect, DrawWindow, windowTitle);
-            windowX = newWindowRect.x;
-            windowY = newWindowRect.y;
+            windowRect.width = (Screen.width / scaleFactor) - (margin * 2);
+            windowRect.height = (Screen.height / scaleFactor) - (margin * 2);
+            windowRect = GUILayout.Window(123456, windowRect, DrawWindow, windowTitle);
 
             GUI.skin = previousGUISkin;
         }
@@ -153,6 +151,14 @@ namespace Consolation
             {
                 EnableMultiTouch();
             }
+
+            // Unity complains if we define this style at the point of declaration.
+            dividerStyle = new GUIStyle
+            {
+                fixedHeight = 1,
+                margin = new RectOffset(0, 0, 4, 4),
+                normal = { background = EditorGUIUtility.whiteTexture },
+            };
         }
 
         void Update()
@@ -192,6 +198,8 @@ namespace Consolation
                     GUILayout.Label(log.Count.ToString(), GUI.skin.box);
                 }
                 GUILayout.EndHorizontal();
+
+                DrawLogSelectButton(logIndex);
             }
             else
             {
@@ -200,6 +208,7 @@ namespace Consolation
                 for (var i = 0; i < labelCount; i += 1)
                 {
                     GUILayout.Label(log.Message, logStyle);
+                    DrawLogSelectButton(logIndex);
                 }
             }
 
@@ -211,7 +220,7 @@ namespace Consolation
             var logStyle = GUI.skin.label;
             logStyle.fontSize = logFontSize;
 
-            scrollPosition = GUILayout.BeginScrollView(scrollPosition);
+            logsScrollPosition = GUILayout.BeginScrollView(logsScrollPosition);
 
             // Used to determine height of accumulated log labels.
             GUILayout.BeginVertical();
@@ -251,6 +260,44 @@ namespace Consolation
             }
         }
 
+        void DrawLogSelectButton(int logIndex)
+        {
+            var lastRect = GUILayoutUtility.GetLastRect();
+
+            if (GUI.Button(lastRect, GUIContent.none, GUIStyle.none))
+            {
+                selectedLogIndex = logIndex;
+                stackTraceScrollPosition = Vector2.zero;
+            }
+        }
+
+        void DrawStackTrace()
+        {
+            if (!selectedLogIndex.HasValue)
+            {
+                return;
+            }
+
+            GUILayout.Box(GUIContent.none, dividerStyle);
+
+            // GUILayout shrinks the stack trace scroll view every time a new log gets added.
+            // We seem to need to set a fixed height to work around this.
+            var scrollViewHeight = windowRect.height / 2;
+
+            stackTraceScrollPosition = GUILayout.BeginScrollView(stackTraceScrollPosition, GUILayout.Height(scrollViewHeight));
+            {
+                var selectedLog = logs[selectedLogIndex.Value];
+                GUILayout.Label(selectedLog.Message);
+                GUILayout.Label(selectedLog.StackTrace);
+            }
+            GUILayout.EndScrollView();
+
+            if (GUILayout.Button("Hide Stack Trace", GUILayout.ExpandWidth(false)))
+            {
+                selectedLogIndex = null;
+            }
+        }
+
         void DrawToolbar()
         {
             GUILayout.BeginHorizontal();
@@ -258,6 +305,7 @@ namespace Consolation
                 if (GUILayout.Button(clearLabel))
                 {
                     logs.Clear();
+                    selectedLogIndex = null;
                 }
 
                 foreach (LogType logType in Enum.GetValues(typeof(LogType)))
@@ -277,6 +325,7 @@ namespace Consolation
         void DrawWindow(int windowID)
         {
             DrawLogList();
+            DrawStackTrace();
             DrawToolbar();
 
             // Allow the window to be dragged by its title bar.
@@ -349,12 +398,12 @@ namespace Consolation
             }
 
             // Scrolled to bottom (with error margin for float math)
-            return Mathf.Approximately(innerScrollHeight, scrollPosition.y + outerScrollHeight);
+            return Mathf.Approximately(innerScrollHeight, logsScrollPosition.y + outerScrollHeight);
         }
 
         void ScrollToBottom()
         {
-            scrollPosition = new Vector2(0, Int32.MaxValue);
+            logsScrollPosition = new Vector2(0, int.MaxValue);
         }
 
         void TrimExcessLogs()

@@ -11,6 +11,9 @@ We adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Ability to view log stack trace
 - Option to use custom GUI skin (useful to customize scrollbar width)
 
+## Changed
+- Make `Console` component properties public
+
 ### Fixed
 - Stop showing multiple duplicate logs when "Only Last Log" selected
 

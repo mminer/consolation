@@ -21,45 +21,45 @@ namespace Consolation
     {
         #region Inspector Settings
 
-        [SerializeField, Tooltip("Hotkey to show and hide the console.")]
+        [Tooltip("Hotkey to show and hide the console.")]
         #if ENABLE_INPUT_SYSTEM
-            Key toggleKey = Key.Backquote;
+            public Key toggleKey = Key.Backquote;
         #else
-            KeyCode toggleKey = KeyCode.BackQuote;
+            public KeyCode toggleKey = KeyCode.BackQuote;
         #endif
 
-        [SerializeField, Tooltip("Whether to open as soon as the game starts.")]
-        bool openOnStart;
+        [Tooltip("Whether to open as soon as the game starts.")]
+        public bool openOnStart;
 
-        [SerializeField, Tooltip("Whether to open the window by shaking the device (mobile-only).")]
-        bool shakeToOpen = true;
+        [Tooltip("Whether to open the window by shaking the device (mobile-only).")]
+        public bool shakeToOpen = true;
 
-        [SerializeField, Tooltip("Whether to require touches while shaking to avoid accidental shakes.")]
-        bool shakeRequiresTouch;
+        [Tooltip("Whether to require touches while shaking to avoid accidental shakes.")]
+        public bool shakeRequiresTouch;
 
-        [SerializeField, Tooltip("Acceleration (squared) above which to open the console.")]
-        float shakeAcceleration = 3f;
+        [Tooltip("Acceleration (squared) above which to open the console.")]
+        public float shakeAcceleration = 3f;
 
-        [SerializeField, Tooltip("Number of seconds that need to pass between visibility toggles. This threshold prevents closing again while shaking to open.")]
-        float toggleThresholdSeconds = .5f;
+        [Tooltip("Number of seconds that need to pass between visibility toggles. This threshold prevents closing again while shaking to open.")]
+        public float toggleThresholdSeconds = .5f;
 
-        [SerializeField, Tooltip("Whether to keep a limited number of logs. Useful if memory usage is a concern.")]
-        bool restrictLogCount;
+        [Tooltip("Whether to keep a limited number of logs. Useful if memory usage is a concern.")]
+        public bool restrictLogCount;
 
-        [SerializeField, Tooltip("Number of logs to keep before removing old ones.")]
-        int maxLogCount = 1000;
+        [Tooltip("Number of logs to keep before removing old ones.")]
+        public int maxLogCount = 1000;
 
-        [SerializeField, Tooltip("Whether log messages are collapsed by default or not.")]
-        bool collapseLogOnStart;
+        [Tooltip("Whether log messages are collapsed by default or not.")]
+        public bool collapseLogOnStart;
 
-        [SerializeField, Tooltip("Font size to display log entries with.")]
-        int logFontSize = 12;
+        [Tooltip("Font size to display log entries with.")]
+        public int logFontSize = 12;
 
-        [SerializeField, Tooltip("Amount to scale UI by.")]
-        float scaleFactor = 1f;
+        [Tooltip("Amount to scale UI by.")]
+        public float scaleFactor = 1f;
 
-        [SerializeField, Tooltip("Custom styles to apply to window.")]
-        GUISkin skin;
+        [Tooltip("Custom styles to apply to window.")]
+        public GUISkin skin;
 
         #endregion
 

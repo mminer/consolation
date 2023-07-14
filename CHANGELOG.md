@@ -10,6 +10,9 @@ We adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Added
 - Option to use custom GUI skin (useful to customize scrollbar width)
 
+### Fixed
+- Stop showing multiple duplicate logs when "Only Last Log" selected
+
 ## [1.3.1] - 2022-07-27
 
 ### Fixed

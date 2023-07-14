@@ -79,10 +79,10 @@ namespace Consolation
         };
 
         bool isCollapsed;
+        bool isOnlyLastLogVisible;
         bool isVisible;
         float lastToggleTime;
         readonly List<Log> logs = new List<Log>();
-        bool onlyLastLog;
         readonly ConcurrentQueue<Log> queuedLogs = new ConcurrentQueue<Log>();
         Vector2 scrollPosition;
         readonly Rect titleBarRect = new Rect(0, 0, 10000, 20);
@@ -180,12 +180,14 @@ namespace Consolation
         {
             GUI.contentColor = logTypeColors[log.Type];
 
+            var truncatedMessage = log.GetTruncatedMessage();
+
             if (isCollapsed)
             {
                 // Draw collapsed log with badge indicating count.
                 GUILayout.BeginHorizontal();
                 {
-                    GUILayout.Label(log.GetTruncatedMessage(), logStyle);
+                    GUILayout.Label(truncatedMessage, logStyle);
                     GUILayout.FlexibleSpace();
                     GUILayout.Label(log.Count.ToString(), GUI.skin.box);
                 }
@@ -193,10 +195,11 @@ namespace Consolation
             }
             else
             {
-                // Draw expanded log.
-                for (var i = 0; i < log.Count; i += 1)
+                var labelCount = isOnlyLastLogVisible ? 1 : log.Count;
+
+                for (var i = 0; i < labelCount; i += 1)
                 {
-                    GUILayout.Label(log.GetTruncatedMessage(), logStyle);
+                    GUILayout.Label(truncatedMessage, logStyle);
                 }
             }
 
@@ -213,7 +216,7 @@ namespace Consolation
             // Used to determine height of accumulated log labels.
             GUILayout.BeginVertical();
             {
-                if (onlyLastLog)
+                if (isOnlyLastLogVisible)
                 {
                     var lastVisibleLog = GetLastVisibleLog();
 
@@ -266,7 +269,7 @@ namespace Consolation
                 }
 
                 isCollapsed = GUILayout.Toggle(isCollapsed, collapseLabel, GUILayout.ExpandWidth(false));
-                onlyLastLog = GUILayout.Toggle(onlyLastLog, onlyLastLogLabel, GUILayout.ExpandWidth(false));
+                isOnlyLastLogVisible = GUILayout.Toggle(isOnlyLastLogVisible, onlyLastLogLabel, GUILayout.ExpandWidth(false));
             }
             GUILayout.EndHorizontal();
         }

@@ -179,7 +179,6 @@ namespace Consolation
         void DrawLog(int logIndex, GUIStyle logStyle)
         {
             var log = logs[logIndex];
-            var truncatedMessage = log.GetTruncatedMessage();
 
             GUI.contentColor = logTypeColors[log.Type];
 
@@ -188,7 +187,7 @@ namespace Consolation
                 // Draw collapsed log with badge indicating count.
                 GUILayout.BeginHorizontal();
                 {
-                    GUILayout.Label(truncatedMessage, logStyle);
+                    GUILayout.Label(log.Message, logStyle);
                     GUILayout.FlexibleSpace();
                     GUILayout.Label(log.Count.ToString(), GUI.skin.box);
                 }
@@ -200,7 +199,7 @@ namespace Consolation
 
                 for (var i = 0; i < labelCount; i += 1)
                 {
-                    GUILayout.Label(truncatedMessage, logStyle);
+                    GUILayout.Label(log.Message, logStyle);
                 }
             }
 
@@ -307,16 +306,9 @@ namespace Consolation
 
         void HandleLogThreaded(string message, string stackTrace, LogType type)
         {
-            var log = new Log
-            {
-                Count = 1,
-                Message = message,
-                StackTrace = stackTrace,
-                Type = type,
-            };
-
             // Queue the log into a ConcurrentQueue to be processed later in the Unity main thread,
             // so that we don't get GUI-related errors for logs coming from other threads
+            var log = new Log(message, stackTrace, type);
             queuedLogs.Enqueue(log);
         }
 
@@ -328,8 +320,7 @@ namespace Consolation
             if (isDuplicateOfLastLog)
             {
                 // Replace previous log with incremented count instead of adding a new one.
-                log.Count = lastLog.Value.Count + 1;
-                logs[logs.Count - 1] = log;
+                logs[logs.Count - 1] = lastLog.Value.IncrementedCount();
             }
             else
             {
@@ -427,35 +418,51 @@ namespace Consolation
     /// <summary>
     /// A basic container for log details.
     /// </summary>
-    struct Log
+    readonly struct Log
     {
-        public int Count;
-        public string Message;
-        public string StackTrace;
-        public LogType Type;
+        public readonly int Count;
+        public readonly string Message;
+        public readonly string StackTrace;
+        public readonly LogType Type;
 
-        /// <summary>
-        /// The max string length supported by UnityEngine.GUILayout.Label without triggering this error:
-        /// "String too long for TextMeshGenerator. Cutting off characters."
-        /// </summary>
-        const int maxMessageLength = 16382;
+        public Log(string message, string stackTrace, LogType type)
+        {
+            Count = 1;
+            Message = TruncateForGUILabel(message);
+            StackTrace = TruncateForGUILabel(stackTrace);
+            Type = type;
+        }
+
+        Log(string message, string stackTrace, LogType type, int count)
+        {
+            Count = count;
+            Message = message;
+            StackTrace = stackTrace;
+            Type = type;
+        }
 
         public bool Equals(Log log)
         {
             return Message == log.Message && StackTrace == log.StackTrace && Type == log.Type;
         }
 
-        /// <summary>
-        /// Return a truncated Message if it exceeds the max Message length.
-        /// </summary>
-        public string GetTruncatedMessage()
+        public Log IncrementedCount()
         {
-            if (string.IsNullOrEmpty(Message))
-            {
-                return Message;
-            }
+            return new Log(Message, StackTrace, Type, Count + 1);
+        }
 
-            return Message.Length <= maxMessageLength ? Message : Message.Substring(0, maxMessageLength);
+        /// <summary>
+        /// Returns text shortened to fit in a GUILayout.Label.
+        /// </summary>
+        static string TruncateForGUILabel(string text)
+        {
+            // The max string length supported by UnityEngine.GUILayout.Label without triggering this error:
+            // "String too long for TextMeshGenerator. Cutting off characters."
+            const int maxLabelLength = 16382;
+
+            return string.IsNullOrEmpty(text) || text.Length <= maxLabelLength
+                ? text
+                : text.Substring(0, maxLabelLength);
         }
     }
 

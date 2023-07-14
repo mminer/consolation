@@ -176,11 +176,12 @@ namespace Consolation
 
         #endregion
 
-        void DrawLog(Log log, GUIStyle logStyle)
+        void DrawLog(int logIndex, GUIStyle logStyle)
         {
-            GUI.contentColor = logTypeColors[log.Type];
-
+            var log = logs[logIndex];
             var truncatedMessage = log.GetTruncatedMessage();
+
+            GUI.contentColor = logTypeColors[log.Type];
 
             if (isCollapsed)
             {
@@ -218,23 +219,23 @@ namespace Consolation
             {
                 if (isOnlyLastLogVisible)
                 {
-                    var lastVisibleLog = GetLastVisibleLog();
+                    var lastVisibleLogIndex = GetLastVisibleLogIndex();
 
-                    if (lastVisibleLog.HasValue)
+                    if (lastVisibleLogIndex.HasValue)
                     {
-                        DrawLog(lastVisibleLog.Value, logStyle);
+                        DrawLog(lastVisibleLogIndex.Value, logStyle);
                     }
                 }
                 else
                 {
-                    foreach (var log in logs)
+                    for (var logIndex = 0; logIndex < logs.Count; logIndex++)
                     {
-                        if (!IsLogVisible(log))
+                        if (!IsLogVisible(logIndex))
                         {
                             continue;
                         }
 
-                        DrawLog(log, logStyle);
+                        DrawLog(logIndex, logStyle);
                     }
                 }
             }
@@ -291,15 +292,13 @@ namespace Consolation
             }
         }
 
-        Log? GetLastVisibleLog()
+        int? GetLastVisibleLogIndex()
         {
-            for (var i = logs.Count - 1; i >= 0; i--)
+            for (var logIndex = logs.Count - 1; logIndex >= 0; logIndex--)
             {
-                var log = logs[i];
-
-                if (IsLogVisible(log))
+                if (IsLogVisible(logIndex))
                 {
-                    return log;
+                    return logIndex;
                 }
             }
 
@@ -339,9 +338,10 @@ namespace Consolation
             }
         }
 
-        bool IsLogVisible(Log log)
+        bool IsLogVisible(int logIndex)
         {
-            return logTypeFilters[log.Type];
+            var logType = logs[logIndex].Type;
+            return logTypeFilters[logType];
         }
 
         bool IsScrolledToBottom(Rect innerScrollRect, Rect outerScrollRect)

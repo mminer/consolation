@@ -15,7 +15,7 @@ namespace Consolation
     /// <summary>
     /// A console to display Unity's debug logs in-game.
     ///
-    /// Version: 1.3.1
+    /// Version: 1.4.0
     /// </summary>
     public class Console : MonoBehaviour
     {

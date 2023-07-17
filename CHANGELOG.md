@@ -5,7 +5,7 @@ All notable changes to Consolation will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 We adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## [1.4.0] - 2023-07-16
 
 ### Added
 - Ability to view log stack trace

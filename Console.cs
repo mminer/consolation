@@ -157,7 +157,7 @@ namespace Consolation
             {
                 fixedHeight = 1,
                 margin = new RectOffset(0, 0, 4, 4),
-                normal = { background = EditorGUIUtility.whiteTexture },
+                normal = { background = Texture2D.whiteTexture },
             };
         }
 

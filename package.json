@@ -1,4 +1,8 @@
 {
+  "author": {
+    "name": "Matthew Miner",
+    "email": "matthew@matthewminer.com"
+  },
   "description": "In-game debug console for Unity.",
   "displayName": "Consolation",
   "keywords": ["console", "debug", "log", "logging"],

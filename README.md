@@ -1,6 +1,6 @@
 # Consolation
 
-It's difficult to retrieve logs and warnings from Unity outside the editor.  To
+It's difficult to retrieve logs and warnings from Unity outside the editor. To
 make it easier, this console displays output from `Debug` in the game itself.
 This is especially useful on mobile devices.
 
@@ -16,12 +16,33 @@ installation is as simple as dragging this script into your project.
 
 ### Unity Package Manager
 
-Alternatively, add the package to your project via
-[UPM](https://docs.unity3d.com/Manual/upm-ui.html) using the Git URL
-https://github.com/mminer/consolation.git. You can also clone the repository and
-point UPM to your local copy.
+Add the package to your project via
+[UPM](https://docs.unity3d.com/Manual/upm-ui.html) using the Git URL:
+
+```
+https://github.com/mminer/consolation.git
+```
+
+1. Open the Package Manager window in Unity (*Window > Package Manager*)
+2. Click the "+" button in the top-left corner
+3. Select "Install package from git URL..."
+4. Enter the above Git URL
+5. Click "Install"
 
 ![Adding package to UPM](https://matthewminer.com/images/consolation-upm.gif)
+
+Alternatively, add the following line to your `Packages/manifest.json` file:
+
+```json
+{
+  "dependencies": {
+    "com.matthewminer.consolation": "https://github.com/mminer/consolation.git",
+    ...
+  }
+}
+```
+
+You can also clone the repository and point UPM to your local copy.
 
 
 ## Using
